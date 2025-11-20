@@ -39,3 +39,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# test and diagnostic files
+test-*.js
+*-test.js
+check-*.sql
+diagnose-*.md
+setup-storage-auto.js
+
+# optional documentation
+AICSO_SETUP_COMPLETE.md
+API_KEY_GUIDE.md
+DIRECT_DIAGNOSIS.sql
+FIXES_NEEDED.md
+IMPLEMENTATION_COMPLETE.md
+MANUAL_SQL.sql
+OPENAI_PROXY_SETUP.md
+PROJECT_PROGRESS.md
+SIMPLE_GUIDE.md
+STORAGE_SETUP_GUIDE.md
