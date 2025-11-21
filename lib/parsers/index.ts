@@ -1,12 +1,4 @@
 import { BookParser, ParsedBook, BookFormat } from '@/lib/types/book'
-import { PDFParser } from './pdf'
-import { EPUBParser } from './epub'
-
-// 注册所有解析器
-const parsers: BookParser[] = [
-  new PDFParser(),
-  new EPUBParser(),
-]
 
 /**
  * 检测文件格式
@@ -34,28 +26,52 @@ export function detectFormat(file: File): BookFormat | null {
 }
 
 /**
- * 解析文件
+ * 解析文件（仅在客户端使用）
+ * 服务器端不调用此函数，避免 DOM 依赖问题
  */
 export async function parseBook(file: File): Promise<ParsedBook> {
-  // 1. 检测格式
-  const format = detectFormat(file)
+  // 动态导入解析器（仅在浏览器环境）
+  if (typeof window === 'undefined') {
+    throw new Error('parseBook can only be called in browser environment')
+  }
 
+  const format = detectFormat(file)
   if (!format) {
     throw new Error(`Unsupported file format: ${file.name}`)
   }
 
-  // 2. 找到对应的解析器
-  const parser = parsers.find(p => p.canParse(file))
-
-  if (!parser) {
-    throw new Error(`No parser found for format: ${format}`)
-  }
-
-  // 3. 解析文件
   console.log(`[Parser] Parsing ${format.toUpperCase()} file:`, file.name)
   const startTime = Date.now()
 
-  const result = await parser.parse(file)
+  let result: ParsedBook
+
+  if (format === 'pdf') {
+    const { PDFParser } = await import('./pdf')
+    const parser = new PDFParser()
+    result = await parser.parse(file)
+  } else if (format === 'epub') {
+    const { EPUBParser } = await import('./epub')
+    const parser = new EPUBParser()
+    result = await parser.parse(file)
+  } else {
+    // TXT
+    const text = await file.text()
+    const paragraphs = text.split(/\n\n+/)
+      .filter(p => p.trim().length > 20)
+      .map((text, index) => ({
+        index,
+        text: text.trim(),
+      }))
+
+    result = {
+      format: 'txt',
+      metadata: {
+        title: file.name.replace('.txt', ''),
+      },
+      fileUrl: URL.createObjectURL(file),
+      paragraphs,
+    }
+  }
 
   const duration = Date.now() - startTime
   console.log(`[Parser] ✓ Parsed in ${duration}ms, ${result.paragraphs.length} paragraphs`)
