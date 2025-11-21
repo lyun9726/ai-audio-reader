@@ -3,6 +3,11 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { detectFormat } from '@/lib/parsers'
 
+// Route segment config for large file uploads
+export const runtime = 'nodejs'
+export const maxDuration = 60 // 60 seconds timeout
+export const dynamic = 'force-dynamic'
+
 // Simple text extraction for server-side (no DOM dependencies)
 async function extractTextSimple(file: File, format: string): Promise<string[]> {
   if (format === 'txt') {

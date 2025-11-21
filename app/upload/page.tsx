@@ -31,6 +31,15 @@ export default function UploadPage() {
         return
       }
 
+      // Check file size (4MB limit for Vercel free tier)
+      const MAX_SIZE = 4 * 1024 * 1024 // 4MB
+      if (selectedFile.size > MAX_SIZE) {
+        const sizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2)
+        setError(`File too large (${sizeMB}MB). Maximum size is 4MB on hosted version. For larger files, use local development (npm run dev).`)
+        setFile(null)
+        return
+      }
+
       // Auto-fill title from filename if empty
       if (!formData.title) {
         const filename = selectedFile.name.replace(/\.(pdf|epub)$/i, '')
