@@ -102,8 +102,14 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // Sanitize filename: remove special characters and spaces
+    const sanitizedFileName = file.name
+      .replace(/[^\w\s.-]/g, '') // Remove special chars except dots, dashes, spaces
+      .replace(/\s+/g, '_')       // Replace spaces with underscores
+      .substring(0, 100)          // Limit length to 100 chars
+
     // Upload file to Supabase Storage first
-    const fileName = `${user.id}/${Date.now()}_${file.name}`
+    const fileName = `${user.id}/${Date.now()}_${sanitizedFileName}`
     const arrayBuffer = await file.arrayBuffer()
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage

@@ -18,8 +18,10 @@ export interface Paragraph {
 export async function extractPdfText(buffer: Buffer): Promise<ExtractedContent> {
   try {
     // Dynamic import for CommonJS module
-    const pdfParse = await import('pdf-parse')
-    const data = await (pdfParse as any)(buffer)
+    const pdfParseModule = await import('pdf-parse')
+    // Handle both default and named exports
+    const pdfParse = (pdfParseModule as any).default || pdfParseModule
+    const data = await pdfParse(buffer)
 
     return {
       text: data.text,
