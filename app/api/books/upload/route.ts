@@ -2,22 +2,49 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { detectFormat } from '@/lib/parsers'
+import { processBookFile } from '@/lib/services/textExtractor'
 
 // Route segment config for large file uploads
 export const runtime = 'nodejs'
 export const maxDuration = 60 // 60 seconds timeout
 export const dynamic = 'force-dynamic'
 
-// Simple text extraction for server-side (no DOM dependencies)
-async function extractTextSimple(file: File, format: string): Promise<string[]> {
+// Extract text from uploaded file using server-side libraries
+async function extractTextFromFile(file: File, format: string): Promise<string[]> {
+  console.log(`[Extract] Extracting text from ${format} file:`, file.name)
+
   if (format === 'txt') {
     const text = await file.text()
-    return text.split(/\n\n+/).filter(p => p.trim().length > 20)
+    const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 20)
+    console.log(`[Extract] TXT extraction complete: ${paragraphs.length} paragraphs`)
+    return paragraphs
   }
 
-  // For PDF and EPUB, we'll extract text on client-side later
-  // For now, create placeholder paragraphs
-  return [`File uploaded: ${file.name}. Content will be processed when you open the reader.`]
+  if (format === 'pdf' || format === 'epub') {
+    try {
+      // Convert File to Buffer for server-side processing
+      const arrayBuffer = await file.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+
+      // Use server-side text extractor (pdf-parse, epub)
+      const { content, paragraphs } = await processBookFile(buffer, format)
+
+      console.log(`[Extract] ${format.toUpperCase()} extraction complete:`, {
+        totalParagraphs: paragraphs.length,
+        title: content.title,
+        author: content.author,
+        totalPages: content.totalPages,
+      })
+
+      // Return paragraph texts
+      return paragraphs.map(p => p.text)
+    } catch (error) {
+      console.error(`[Extract] Failed to extract ${format}:`, error)
+      throw new Error(`Failed to extract text from ${format.toUpperCase()} file`)
+    }
+  }
+
+  throw new Error(`Unsupported format: ${format}`)
 }
 
 export async function POST(request: Request) {
@@ -101,8 +128,8 @@ export async function POST(request: Request) {
 
     console.log('[Upload] File uploaded to:', publicUrl)
 
-    // Extract simple text for initial processing
-    const paragraphs = await extractTextSimple(file, format)
+    // Extract text content from the file
+    const paragraphs = await extractTextFromFile(file, format)
 
     // Create book record
     const { data: book, error: bookError } = await supabase
