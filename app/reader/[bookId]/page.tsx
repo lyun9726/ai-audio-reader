@@ -314,6 +314,108 @@ export default function ReaderPage() {
     )
   }
 
+  // Render native PDF/EPUB viewer or fallback to paragraph view
+  const renderContent = () => {
+    // Native rendering for PDF/EPUB
+    if (book.format === 'pdf' && book.file_url) {
+      return (
+        <div className="h-full">
+          <PdfRenderer
+            fileUrl={book.file_url}
+            currentPage={currentParaIdx + 1}
+            onPageChange={(page) => setCurrentParaIdx(page - 1)}
+          />
+        </div>
+      )
+    }
+
+    if (book.format === 'epub' && book.file_url) {
+      return (
+        <div className="h-full">
+          <EpubRenderer
+            fileUrl={book.file_url}
+            onLocationChange={(location) => {
+              console.log('[Reader] EPUB location changed:', location)
+              saveProgress(currentParaIdx)
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Fallback: paragraph-based view for TXT or legacy books
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
+          {paragraphs.map((para, idx) => (
+            <div
+              key={para.id}
+              ref={el => { paraRefs.current[idx] = el }}
+              className={`p-6 rounded-xl transition-all ${
+                idx === currentParaIdx
+                  ? 'bg-blue-500/10 border-2 border-blue-500'
+                  : 'bg-slate-800/50 border border-slate-700'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <span className="text-xs font-medium text-slate-500">
+                  Paragraph {idx + 1} / {paragraphs.length}
+                </span>
+                {idx === currentParaIdx && (
+                  <div className="flex items-center space-x-2">
+                    {isTranslating && (
+                      <span className="flex items-center space-x-1 text-xs text-yellow-400">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>翻译中...</span>
+                      </span>
+                    )}
+                    {isGeneratingAudio && (
+                      <span className="flex items-center space-x-1 text-xs text-purple-400">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>生成音频...</span>
+                      </span>
+                    )}
+                    {isPlaying && !isTranslating && !isGeneratingAudio && (
+                      <span className="flex items-center space-x-1 text-xs text-blue-400">
+                        <Volume2 className="w-3 h-3 animate-pulse" />
+                        <span>播放中</span>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {viewMode === 'dual' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 mb-2">Original</p>
+                    <p className="text-slate-300 leading-relaxed">{para.text_original}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 mb-2">Translation</p>
+                    <p className="text-white leading-relaxed">
+                      {translationCache.get(idx) || para.text_translated || 'Not translated'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {viewMode === 'original' && (
+                <p className="text-white leading-relaxed">{para.text_original}</p>
+              )}
+
+              {viewMode === 'translated' && (
+                <p className="text-white leading-relaxed text-lg">
+                  {translationCache.get(idx) || para.text_translated || 'Not translated'}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
       {/* Header */}
@@ -334,88 +436,24 @@ export default function ReaderPage() {
             </div>
 
             <div className="flex items-center space-x-2">
-              <button
-                onClick={cycleViewMode}
-                className="flex items-center space-x-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
-              >
-                <Languages className="w-4 h-4 text-blue-400" />
-                <span className="text-sm capitalize text-white">{viewMode}</span>
-              </button>
+              {/* Only show view mode toggle for paragraph view */}
+              {!['pdf', 'epub'].includes(book.format || '') && (
+                <button
+                  onClick={cycleViewMode}
+                  className="flex items-center space-x-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                  <Languages className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm capitalize text-white">{viewMode}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="space-y-6">
-            {paragraphs.map((para, idx) => (
-              <div
-                key={para.id}
-                ref={el => { paraRefs.current[idx] = el }}
-                className={`p-6 rounded-xl transition-all ${
-                  idx === currentParaIdx
-                    ? 'bg-blue-500/10 border-2 border-blue-500'
-                    : 'bg-slate-800/50 border border-slate-700'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <span className="text-xs font-medium text-slate-500">
-                    Paragraph {idx + 1} / {paragraphs.length}
-                  </span>
-                  {idx === currentParaIdx && (
-                    <div className="flex items-center space-x-2">
-                      {isTranslating && (
-                        <span className="flex items-center space-x-1 text-xs text-yellow-400">
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          <span>翻译中...</span>
-                        </span>
-                      )}
-                      {isGeneratingAudio && (
-                        <span className="flex items-center space-x-1 text-xs text-purple-400">
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          <span>生成音频...</span>
-                        </span>
-                      )}
-                      {isPlaying && !isTranslating && !isGeneratingAudio && (
-                        <span className="flex items-center space-x-1 text-xs text-blue-400">
-                          <Volume2 className="w-3 h-3 animate-pulse" />
-                          <span>播放中</span>
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {viewMode === 'dual' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs font-medium text-slate-500 mb-2">Original</p>
-                      <p className="text-slate-300 leading-relaxed">{para.text_original}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-slate-500 mb-2">Translation</p>
-                      <p className="text-white leading-relaxed">
-                        {translationCache.get(idx) || para.text_translated || 'Not translated'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {viewMode === 'original' && (
-                  <p className="text-white leading-relaxed">{para.text_original}</p>
-                )}
-
-                {viewMode === 'translated' && (
-                  <p className="text-white leading-relaxed text-lg">
-                    {translationCache.get(idx) || para.text_translated || 'Not translated'}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+      <main className="flex-1 overflow-hidden">
+        {renderContent()}
       </main>
 
       {/* Audio Player Controls */}
