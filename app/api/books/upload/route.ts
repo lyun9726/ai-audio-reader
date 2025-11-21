@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { detectFormat } from '@/lib/parsers'
 
@@ -16,6 +17,7 @@ async function extractTextSimple(file: File, format: string): Promise<string[]> 
 
 export async function POST(request: Request) {
   try {
+    // Use regular client for auth check
     const supabase = await createClient()
 
     // Check authentication
@@ -62,11 +64,17 @@ export async function POST(request: Request) {
 
     console.log('[Upload] Processing file:', file.name, 'Format:', format)
 
+    // Create service role client for storage upload (anon key doesn't have upload permission)
+    const supabaseAdmin = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
     // Upload file to Supabase Storage first
     const fileName = `${user.id}/${Date.now()}_${file.name}`
     const arrayBuffer = await file.arrayBuffer()
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from('books')
       .upload(fileName, arrayBuffer, {
         contentType: file.type,
@@ -82,7 +90,7 @@ export async function POST(request: Request) {
     }
 
     // Get public URL
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = supabaseAdmin.storage
       .from('books')
       .getPublicUrl(fileName)
 
