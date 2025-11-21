@@ -4,6 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Loader2 } from 'lucide-react'
 
+// Initialize PDF.js worker
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+}
+
 interface PdfRendererProps {
   fileUrl: string
   currentPage?: number
@@ -28,20 +33,27 @@ export function PdfRenderer({
   const [scale, setScale] = useState(1.5)
   const [loading, setLoading] = useState(true)
   const [rendering, setRendering] = useState(false)
+  const [error, setError] = useState<string>('')
 
   // 加载 PDF
   useEffect(() => {
     const loadPdf = async () => {
       try {
         setLoading(true)
+        setError('')
+        console.log('[PdfRenderer] Loading PDF from:', fileUrl)
+
         const loadingTask = pdfjsLib.getDocument(fileUrl)
         const pdfDoc = await loadingTask.promise
+
+        console.log('[PdfRenderer] PDF loaded successfully, pages:', pdfDoc.numPages)
 
         setPdf(pdfDoc)
         setNumPages(pdfDoc.numPages)
         setLoading(false)
-      } catch (error) {
-        console.error('Error loading PDF:', error)
+      } catch (error: any) {
+        console.error('[PdfRenderer] Error loading PDF:', error)
+        setError(error.message || 'Failed to load PDF')
         setLoading(false)
       }
     }
@@ -112,6 +124,15 @@ export function PdfRenderer({
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8">
+        <div className="text-red-400 mb-4">Failed to load PDF</div>
+        <div className="text-sm text-slate-400">{error}</div>
       </div>
     )
   }
