@@ -15,8 +15,17 @@ import {
   Languages,
 } from 'lucide-react'
 import { Book, BookParagraph } from '@/lib/types'
+import { PdfRenderer } from '@/lib/components/PdfRenderer'
+import { EpubRenderer } from '@/lib/components/EpubRenderer'
 
-type ViewMode = 'original' | 'translated' | 'dual'
+type ViewMode = 'original' | 'translated' | 'dual' | 'native'
+
+// Extend Book type with new fields until database types are regenerated
+type ExtendedBook = Book & {
+  format?: 'pdf' | 'epub' | 'txt'
+  file_url?: string
+  page_count?: number
+}
 
 export default function ReaderPage() {
   const router = useRouter()
@@ -24,7 +33,7 @@ export default function ReaderPage() {
   const { user } = useAuth()
   const bookId = params.bookId as string
 
-  const [book, setBook] = useState<Book | null>(null)
+  const [book, setBook] = useState<ExtendedBook | null>(null)
   const [paragraphs, setParagraphs] = useState<BookParagraph[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

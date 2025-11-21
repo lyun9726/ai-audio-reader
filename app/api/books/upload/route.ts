@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { processBookFile } from '@/lib/services/textExtractor'
+import { parseBook, isFormatSupported } from '@/lib/parsers'
 
 export async function POST(request: Request) {
   try {
@@ -30,11 +30,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
     }
 
-    // Validate file type
-    const fileName = file.name.toLowerCase()
-    const fileType = fileName.endsWith('.pdf') ? 'pdf' : fileName.endsWith('.epub') ? 'epub' : null
-
-    if (!fileType) {
+    // Validate file type using new parser system
+    if (!isFormatSupported(file)) {
       return NextResponse.json(
         { error: 'Invalid file type. Only PDF and EPUB are supported.' },
         { status: 400 }
@@ -50,26 +47,45 @@ export async function POST(request: Request) {
       )
     }
 
-    // Convert file to buffer
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    // Parse book using new parser system
+    console.log('[Upload] Parsing book:', file.name)
+    const parsedBook = await parseBook(file)
 
-    // Extract text and split into paragraphs
-    const { content, paragraphs } = await processBookFile(buffer, fileType)
+    console.log('[Upload] Parsed successfully:', {
+      format: parsedBook.format,
+      paragraphs: parsedBook.paragraphs.length,
+      metadata: parsedBook.metadata,
+    })
 
-    // Create book record
+    // Determine max chapter number (for PDF it's 1, for EPUB varies)
+    const chapterNumbers = parsedBook.paragraphs
+      .map(p => {
+        // For EPUB, we don't have chapter numbers, so count unique chapter titles
+        if (parsedBook.format === 'epub') return 1
+        // For PDF, use page number or 1
+        return p.page || 1
+      })
+    const maxChapter = chapterNumbers.length > 0 ? Math.max(...chapterNumbers) : 1
+
+    // Create book record with new fields
     const { data: book, error: bookError } = await supabase
       .from('books')
       .insert({
         owner_user_id: user.id,
         title: title,
-        author: author || content.author || null,
+        author: author || parsedBook.metadata.author || null,
         description: description || null,
         original_lang: sourceLang,
         target_lang: targetLang,
         status: 'processing',
-        total_chapters: Math.max(...paragraphs.map(p => p.chapter), 1),
-        total_paragraphs: paragraphs.length,
+        format: parsedBook.format,
+        file_url: parsedBook.fileUrl,
+        page_count: parsedBook.metadata.pageCount || parsedBook.metadata.totalPages,
+        publisher: parsedBook.metadata.publisher,
+        language: parsedBook.metadata.language,
+        isbn: parsedBook.metadata.isbn,
+        total_chapters: maxChapter,
+        total_paragraphs: parsedBook.paragraphs.length,
       })
       .select()
       .single()
@@ -82,13 +98,19 @@ export async function POST(request: Request) {
       )
     }
 
-    // Insert paragraphs
-    const paragraphsToInsert = paragraphs.map(p => ({
+    // Insert paragraphs with format-specific fields
+    const paragraphsToInsert = parsedBook.paragraphs.map(p => ({
       book_id: book.id,
-      chapter: p.chapter,
-      para_idx: p.paraIdx,
+      chapter: p.page || 1, // Use page for PDF, default 1 for EPUB
+      para_idx: p.index,
       text_original: p.text,
       tokens: Math.ceil(p.text.length / 4), // Rough estimate
+      // PDF-specific fields
+      page: p.page,
+      bbox: p.bbox ? JSON.stringify(p.bbox) : null,
+      // EPUB-specific fields
+      chapter_title: p.chapter,
+      href: p.href,
     }))
 
     // Insert in batches to avoid timeout
@@ -125,7 +147,7 @@ export async function POST(request: Request) {
       book: {
         id: book.id,
         title: book.title,
-        totalParagraphs: paragraphs.length,
+        totalParagraphs: parsedBook.paragraphs.length,
       },
     })
   } catch (error: any) {
