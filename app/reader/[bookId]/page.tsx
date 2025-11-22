@@ -42,6 +42,18 @@ const DualLanguagePdfRenderer = dynamic(
   }
 )
 
+const InterlineTranslationReader = dynamic(
+  () => import('@/lib/components/InterlineTranslationReader').then(mod => ({ default: mod.InterlineTranslationReader })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+      </div>
+    )
+  }
+)
+
 const EpubRenderer = dynamic(
   () => import('@/lib/components/EpubRenderer').then(mod => {
     console.log('[Reader] EpubRenderer module loaded:', mod)
@@ -362,6 +374,23 @@ export default function ReaderPage() {
   const renderContent = () => {
     console.log('[Reader] renderContent called, book format:', book.format, 'file_url:', book.file_url, 'useNativeViewer:', useNativeViewer)
 
+    // 优先使用译文穿插阅读器(所有格式都适用)
+    if (!useNativeViewer || book.format === 'txt' || !book.file_url) {
+      console.log('[Reader] Rendering Interline Translation Reader')
+      return (
+        <InterlineTranslationReader
+          bookId={bookId}
+          paragraphs={paragraphs}
+          currentParaIdx={currentParaIdx}
+          onParagraphChange={setCurrentParaIdx}
+          translationCache={translationCache}
+          onTranslateRequest={translateParagraph}
+          playbackSpeed={playbackSpeed}
+          onSpeedChange={setPlaybackSpeed}
+        />
+      )
+    }
+
     // Dual-language rendering for PDF (if enabled and has paragraphs)
     if (useNativeViewer && useDualLanguageView && book.format === 'pdf' && book.file_url && paragraphs.length > 0) {
       console.log('[Reader] Rendering Dual-Language PDF')
@@ -407,81 +436,31 @@ export default function ReaderPage() {
       )
     }
 
-    console.log('[Reader] Rendering paragraph view for translation/audio')
+    console.log('[Reader] Rendering Interline Translation Reader (legacy fallback)')
 
-    // Fallback: paragraph-based view for TXT or legacy books
+    // Fallback: use the new interline translation reader
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-6">
-          {paragraphs.map((para, idx) => (
-            <div
-              key={para.id}
-              ref={el => { paraRefs.current[idx] = el }}
-              className={`p-6 rounded-xl transition-all ${
-                idx === currentParaIdx
-                  ? 'bg-blue-500/10 border-2 border-blue-500'
-                  : 'bg-slate-800/50 border border-slate-700'
-              }`}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <span className="text-xs font-medium text-slate-500">
-                  Paragraph {idx + 1} / {paragraphs.length}
-                </span>
-                {idx === currentParaIdx && (
-                  <div className="flex items-center space-x-2">
-                    {isTranslating && (
-                      <span className="flex items-center space-x-1 text-xs text-yellow-400">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        <span>翻译中...</span>
-                      </span>
-                    )}
-                    {isGeneratingAudio && (
-                      <span className="flex items-center space-x-1 text-xs text-purple-400">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        <span>生成音频...</span>
-                      </span>
-                    )}
-                    {isPlaying && !isTranslating && !isGeneratingAudio && (
-                      <span className="flex items-center space-x-1 text-xs text-blue-400">
-                        <Volume2 className="w-3 h-3 animate-pulse" />
-                        <span>播放中</span>
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {viewMode === 'dual' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs font-medium text-slate-500 mb-2">Original</p>
-                    <p className="text-slate-300 leading-relaxed">{para.text_original}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-slate-500 mb-2">Translation</p>
-                    <p className="text-white leading-relaxed">
-                      {translationCache.get(idx) || para.text_translated || 'Not translated'}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {viewMode === 'original' && (
-                <p className="text-white leading-relaxed">{para.text_original}</p>
-              )}
-
-              {viewMode === 'translated' && (
-                <p className="text-white leading-relaxed text-lg">
-                  {translationCache.get(idx) || para.text_translated || 'Not translated'}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+      <InterlineTranslationReader
+        bookId={bookId}
+        paragraphs={paragraphs}
+        currentParaIdx={currentParaIdx}
+        onParagraphChange={setCurrentParaIdx}
+        translationCache={translationCache}
+        onTranslateRequest={translateParagraph}
+        playbackSpeed={playbackSpeed}
+        onSpeedChange={setPlaybackSpeed}
+      />
     )
   }
 
+  // 如果使用 InterlineTranslationReader,它已经包含完整的 UI
+  const usingInterlineReader = !useNativeViewer || book.format === 'txt' || !book.file_url
+
+  if (usingInterlineReader) {
+    return renderContent()
+  }
+
+  // 否则使用传统布局(PDF/EPUB 原生查看器)
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
       {/* Header */}
@@ -507,23 +486,12 @@ export default function ReaderPage() {
                 <button
                   onClick={() => setUseNativeViewer(!useNativeViewer)}
                   className="flex items-center space-x-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
-                  title={useNativeViewer ? '切换到翻译模式' : '切换到原文阅读'}
+                  title={useNativeViewer ? '切换到译文穿插模式' : '切换到PDF原文'}
                 >
                   <BookOpen className="w-4 h-4 text-blue-400" />
                   <span className="text-sm text-white">
-                    {useNativeViewer ? '原文阅读' : '翻译播放'}
+                    {useNativeViewer ? 'PDF原文' : '译文穿插'}
                   </span>
-                </button>
-              )}
-
-              {/* View mode toggle for paragraph view */}
-              {(!useNativeViewer || !['pdf', 'epub'].includes(book.format || '')) && (
-                <button
-                  onClick={cycleViewMode}
-                  className="flex items-center space-x-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
-                >
-                  <Languages className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm capitalize text-white">{viewMode}</span>
                 </button>
               )}
             </div>
@@ -535,51 +503,6 @@ export default function ReaderPage() {
       <main className="flex-1 overflow-hidden relative">
         {renderContent()}
       </main>
-
-      {/* Audio Player Controls */}
-      <div className="bg-slate-900 border-t border-slate-800 sticky bottom-0">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handlePrevious}
-                disabled={currentParaIdx === 0}
-                className="p-2 hover:bg-slate-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <SkipBack className="w-5 h-5 text-white" />
-              </button>
-
-              <button
-                onClick={handlePlayPause}
-                disabled={isTranslating || isGeneratingAudio}
-                className="p-4 bg-blue-500 hover:bg-blue-600 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isPlaying && !isTranslating && !isGeneratingAudio ? (
-                  <Pause className="w-6 h-6 text-white" />
-                ) : isTranslating || isGeneratingAudio ? (
-                  <Loader2 className="w-6 h-6 text-white animate-spin" />
-                ) : (
-                  <Play className="w-6 h-6 text-white" />
-                )}
-              </button>
-
-              <button
-                onClick={handleNext}
-                disabled={currentParaIdx >= paragraphs.length - 1}
-                className="p-2 hover:bg-slate-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <SkipForward className="w-5 h-5 text-white" />
-              </button>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-slate-400">
-                {currentParaIdx + 1} / {paragraphs.length}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Hidden Audio Element */}
       <audio ref={audioRef} />
