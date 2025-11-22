@@ -36,10 +36,18 @@ export function EpubRenderer({
         setError('')
         console.log('[EpubRenderer] Loading EPUB from:', fileUrl)
 
-        const epubBook = ePub(fileUrl)
+        // Create EPUB book with options
+        const epubBook = ePub(fileUrl, {
+          openAs: 'epub',
+          requestCredentials: false,
+        })
         setBook(epubBook)
 
-        console.log('[EpubRenderer] EPUB book created, rendering...')
+        console.log('[EpubRenderer] EPUB book created, waiting for ready...')
+
+        // Wait for book to be ready
+        await epubBook.ready
+        console.log('[EpubRenderer] EPUB book ready, rendering...')
 
         // 渲染到容器
         const epubRendition = epubBook.renderTo(viewerRef.current!, {
@@ -50,12 +58,14 @@ export function EpubRenderer({
         })
 
         setRendition(epubRendition)
+        console.log('[EpubRenderer] Rendition created, displaying...')
 
         // 显示第一章
         await epubRendition.display()
         console.log('[EpubRenderer] EPUB displayed successfully')
 
         // 加载目录
+        console.log('[EpubRenderer] Loading navigation...')
         const navigation = await epubBook.loaded.navigation
         setToc(navigation.toc)
         console.log('[EpubRenderer] Table of contents loaded:', navigation.toc.length, 'chapters')
