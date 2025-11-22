@@ -181,12 +181,20 @@ export async function POST(request: Request) {
         })
       } catch (extractError: any) {
         console.error('[Upload] Text extraction failed:', extractError)
-        // Fall back to creating book without paragraphs
-        console.log('[Upload] Continuing without text extraction...')
+        console.error('[Upload] Error stack:', extractError.stack)
+
+        // For PDF/EPUB, text extraction is critical - return error instead of creating empty book
+        return NextResponse.json(
+          {
+            error: 'Text extraction failed: ' + extractError.message,
+            details: 'Unable to extract text from this PDF/EPUB file. The file may be scanned images or password-protected.',
+          },
+          { status: 500 }
+        )
       }
     }
 
-    // Fallback: Create book without paragraphs (for TXT or if extraction failed)
+    // Fallback: Create book without paragraphs (only for TXT format)
     const { data: book, error: bookError } = await supabase
       .from('books')
       .insert({

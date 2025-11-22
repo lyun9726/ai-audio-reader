@@ -17,11 +17,24 @@ export interface Paragraph {
  */
 export async function extractPdfText(buffer: Buffer): Promise<ExtractedContent> {
   try {
+    console.log('[PDF Extract] Starting extraction, buffer size:', buffer.length, 'bytes')
+
     // Dynamic import for CommonJS module
     const pdfParseModule = await import('pdf-parse')
     // Handle both default and named exports
     const pdfParse = (pdfParseModule as any).default || pdfParseModule
+
+    console.log('[PDF Extract] pdf-parse loaded, parsing...')
     const data = await pdfParse(buffer)
+
+    console.log('[PDF Extract] ✓ Parsed successfully')
+    console.log('[PDF Extract] Pages:', data.numpages)
+    console.log('[PDF Extract] Text length:', data.text?.length || 0, 'characters')
+    console.log('[PDF Extract] First 200 chars:', data.text?.substring(0, 200))
+
+    if (!data.text || data.text.trim().length === 0) {
+      throw new Error('PDF contains no extractable text. It may be a scanned document (images only).')
+    }
 
     return {
       text: data.text,
@@ -29,9 +42,10 @@ export async function extractPdfText(buffer: Buffer): Promise<ExtractedContent> 
       author: data.info?.Author || undefined,
       totalPages: data.numpages,
     }
-  } catch (error) {
-    console.error('PDF extraction error:', error)
-    throw new Error('Failed to extract text from PDF')
+  } catch (error: any) {
+    console.error('[PDF Extract] Error:', error.message)
+    console.error('[PDF Extract] Stack:', error.stack)
+    throw new Error('Failed to extract text from PDF: ' + error.message)
   }
 }
 
