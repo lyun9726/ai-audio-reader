@@ -326,8 +326,11 @@ export default function ReaderPage() {
 
   // Render native PDF/EPUB viewer or fallback to paragraph view
   const renderContent = () => {
+    console.log('[Reader] renderContent called, book format:', book.format, 'file_url:', book.file_url)
+
     // Native rendering for PDF/EPUB
     if (book.format === 'pdf' && book.file_url) {
+      console.log('[Reader] Rendering PDF')
       return (
         <div className="h-full">
           <PdfRenderer
@@ -340,6 +343,7 @@ export default function ReaderPage() {
     }
 
     if (book.format === 'epub' && book.file_url) {
+      console.log('[Reader] Rendering EPUB')
       return (
         <div className="h-full">
           <EpubRenderer
@@ -352,6 +356,8 @@ export default function ReaderPage() {
         </div>
       )
     }
+
+    console.log('[Reader] Rendering fallback paragraph view')
 
     // Fallback: paragraph-based view for TXT or legacy books
     return (

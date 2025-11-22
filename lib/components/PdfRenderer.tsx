@@ -30,6 +30,7 @@ export function PdfRenderer({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const renderTaskRef = useRef<any>(null)
+  const loadedRef = useRef(false)
 
   const [pdf, setPdf] = useState<any>(null)
   const [pageNum, setPageNum] = useState(currentPage)
@@ -41,10 +42,13 @@ export function PdfRenderer({
 
   // 加载 PDF
   useEffect(() => {
+    if (loadedRef.current) return // Prevent double loading in React Strict Mode
+
     const loadPdf = async () => {
       try {
         setLoading(true)
         setError('')
+        loadedRef.current = true
         console.log('[PdfRenderer] Loading PDF from:', fileUrl)
 
         const loadingTask = pdfjsLib.getDocument(fileUrl)
