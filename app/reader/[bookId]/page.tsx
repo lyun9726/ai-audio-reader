@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/lib/contexts/AuthContext'
+import dynamic from 'next/dynamic'
 import {
   BookOpen,
   ArrowLeft,
@@ -15,8 +16,17 @@ import {
   Languages,
 } from 'lucide-react'
 import { Book, BookParagraph } from '@/lib/types'
-import { PdfRenderer } from '@/lib/components/PdfRenderer'
-import { EpubRenderer } from '@/lib/components/EpubRenderer'
+
+// Dynamic import to avoid SSR issues with PDF.js and EPUB.js
+const PdfRenderer = dynamic(
+  () => import('@/lib/components/PdfRenderer').then(mod => ({ default: mod.PdfRenderer })),
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 text-blue-400 animate-spin" /></div> }
+)
+
+const EpubRenderer = dynamic(
+  () => import('@/lib/components/EpubRenderer').then(mod => ({ default: mod.EpubRenderer })),
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 text-blue-400 animate-spin" /></div> }
+)
 
 type ViewMode = 'original' | 'translated' | 'dual' | 'native'
 

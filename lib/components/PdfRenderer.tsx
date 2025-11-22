@@ -70,9 +70,17 @@ export function PdfRenderer({
   useEffect(() => {
     if (!pdf || !canvasRef.current) return
 
+    let renderTask: any = null
+
     const renderPage = async () => {
       try {
         setRendering(true)
+
+        // Cancel any ongoing render task
+        if (renderTask) {
+          renderTask.cancel()
+        }
+
         const page = await pdf.getPage(pageNum)
         const viewport = page.getViewport({ scale })
 
@@ -87,20 +95,33 @@ export function PdfRenderer({
           viewport: viewport,
         }
 
-        await page.render(renderContext).promise
+        renderTask = page.render(renderContext)
+        await renderTask.promise
+        renderTask = null
         setRendering(false)
 
         // 通知父组件页码变化
         if (onPageChange) {
           onPageChange(pageNum)
         }
-      } catch (error) {
-        console.error('Error rendering page:', error)
+      } catch (error: any) {
+        if (error.name === 'RenderingCancelledException') {
+          console.log('[PdfRenderer] Render cancelled')
+        } else {
+          console.error('[PdfRenderer] Error rendering page:', error)
+        }
         setRendering(false)
       }
     }
 
     renderPage()
+
+    // Cleanup function to cancel rendering on unmount
+    return () => {
+      if (renderTask) {
+        renderTask.cancel()
+      }
+    }
   }, [pdf, pageNum, scale])
 
   const goToPrevPage = () => {
