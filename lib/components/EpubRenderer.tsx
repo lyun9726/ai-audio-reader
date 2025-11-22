@@ -65,7 +65,6 @@ export function EpubRenderer({
         // Create EPUB book with options
         const epubBook = ePub(fileUrl, {
           openAs: 'epub',
-          requestCredentials: false,
         })
         setBook(epubBook)
 
