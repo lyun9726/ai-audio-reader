@@ -112,7 +112,7 @@ export async function POST(request: Request) {
           const buffer = Buffer.from(arrayBuffer)
           const { content, paragraphs: extractedParas } = await processBookFile(buffer, format)
           fullText = content.text
-          extractedAuthor = extractedAuthor || content.author
+          extractedAuthor = extractedAuthor || content.author || null
         } else {
           console.log('[Upload] Using client-extracted text, length:', fullText.length)
         }
