@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { detectFormat } from '@/lib/parsers'
+import { processBookFile } from '@/lib/services/textExtractor'
 
 // Route segment config for large file uploads
 export const runtime = 'nodejs'
@@ -95,13 +96,103 @@ export async function POST(request: Request) {
 
     console.log('[Upload] File uploaded to:', publicUrl)
 
-    // Create book record (no text extraction needed - file will be rendered directly)
+    // Extract text and paragraphs for translation/TTS features
+    let totalParagraphs = 0
+    let extractedAuthor = author
+
+    if (format === 'pdf' || format === 'epub') {
+      try {
+        console.log('[Upload] Extracting text from', format.toUpperCase(), '...')
+        const buffer = Buffer.from(arrayBuffer)
+        const { content, paragraphs } = await processBookFile(buffer, format)
+
+        // Use extracted metadata if not provided
+        if (!extractedAuthor && content.author) {
+          extractedAuthor = content.author
+        }
+
+        totalParagraphs = paragraphs.length
+        console.log('[Upload] ✓ Extracted', totalParagraphs, 'paragraphs')
+
+        // Create book record first
+        const { data: book, error: bookError } = await supabase
+          .from('books')
+          .insert({
+            owner_user_id: user.id,
+            title: title,
+            author: extractedAuthor,
+            description: description,
+            original_lang: sourceLang,
+            target_lang: targetLang,
+            status: 'ready',
+            format: format,
+            file_url: publicUrl,
+            s3_original_url: publicUrl,
+            total_chapters: 1,
+            total_paragraphs: totalParagraphs,
+          })
+          .select()
+          .single()
+
+        if (bookError) {
+          console.error('Error creating book:', bookError)
+          return NextResponse.json(
+            { error: 'Failed to create book record' },
+            { status: 500 }
+          )
+        }
+
+        // Insert paragraphs into database
+        console.log('[Upload] Saving paragraphs to database...')
+        const paragraphRecords = paragraphs.map(p => ({
+          book_id: book.id,
+          chapter: p.chapter,
+          para_idx: p.paraIdx,
+          text_original: p.text,
+        }))
+
+        // Insert in batches to avoid payload size issues
+        const BATCH_SIZE = 100
+        for (let i = 0; i < paragraphRecords.length; i += BATCH_SIZE) {
+          const batch = paragraphRecords.slice(i, i + BATCH_SIZE)
+          const { error: parasError } = await supabase
+            .from('book_paragraphs')
+            .insert(batch)
+
+          if (parasError) {
+            console.error('[Upload] Error inserting paragraphs:', parasError)
+            // Continue anyway - some paragraphs are better than none
+          }
+        }
+
+        console.log('[Upload] ✓ Book created successfully:', book.id)
+        console.log('[Upload] ✓ Original file preserved at:', publicUrl)
+        console.log('[Upload] ✓ Saved', totalParagraphs, 'paragraphs to database')
+
+        return NextResponse.json({
+          success: true,
+          book: {
+            id: book.id,
+            title: book.title,
+            format: book.format,
+            fileUrl: publicUrl,
+            totalParagraphs: totalParagraphs,
+          },
+        })
+      } catch (extractError: any) {
+        console.error('[Upload] Text extraction failed:', extractError)
+        // Fall back to creating book without paragraphs
+        console.log('[Upload] Continuing without text extraction...')
+      }
+    }
+
+    // Fallback: Create book without paragraphs (for TXT or if extraction failed)
     const { data: book, error: bookError } = await supabase
       .from('books')
       .insert({
         owner_user_id: user.id,
         title: title,
-        author: author,
+        author: extractedAuthor,
         description: description,
         original_lang: sourceLang,
         target_lang: targetLang,
@@ -110,7 +201,7 @@ export async function POST(request: Request) {
         file_url: publicUrl,
         s3_original_url: publicUrl,
         total_chapters: 1,
-        total_paragraphs: 0, // Will be populated when user opens the reader
+        total_paragraphs: totalParagraphs,
       })
       .select()
       .single()
