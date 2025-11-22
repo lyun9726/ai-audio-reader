@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import ePub, { Book, Rendition } from 'epubjs'
 import { ChevronLeft, ChevronRight, Menu, Loader2, Type, Palette } from 'lucide-react'
 
@@ -15,8 +15,8 @@ export function EpubRenderer({
   onLocationChange,
   onTextSelect,
 }: EpubRendererProps) {
-  const viewerRef = useRef<HTMLDivElement>(null)
   const loadedRef = useRef(false)
+  const [viewerElement, setViewerElement] = useState<HTMLDivElement | null>(null)
 
   const [book, setBook] = useState<Book | null>(null)
   const [rendition, setRendition] = useState<Rendition | null>(null)
@@ -28,15 +28,23 @@ export function EpubRenderer({
   const [fontSize, setFontSize] = useState(100)
   const [theme, setTheme] = useState<'light' | 'dark'>('dark')
 
-  // 加载 EPUB
+  // Callback ref to get the viewer element when it's mounted
+  const viewerRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      console.log('[EpubRenderer] viewerRef callback - element is ready')
+      setViewerElement(node)
+    }
+  }, [])
+
+  // 加载 EPUB when viewerElement is available
   useEffect(() => {
     if (!fileUrl) {
       console.log('[EpubRenderer] Missing fileUrl')
       return
     }
 
-    if (!viewerRef.current) {
-      console.log('[EpubRenderer] viewerRef not ready yet, will retry')
+    if (!viewerElement) {
+      console.log('[EpubRenderer] Viewer element not ready yet')
       return
     }
 
@@ -44,6 +52,8 @@ export function EpubRenderer({
       console.log('[EpubRenderer] Already loaded, skipping')
       return
     }
+
+    console.log('[EpubRenderer] Starting EPUB load...')
 
     const loadEpub = async () => {
       try {
@@ -65,10 +75,15 @@ export function EpubRenderer({
         await epubBook.ready
         console.log('[EpubRenderer] EPUB book ready, rendering...')
 
-        // 渲染到容器
-        const epubRendition = epubBook.renderTo(viewerRef.current!, {
-          width: '100%',
-          height: '100%',
+        // Get container dimensions
+        const containerWidth = viewerElement.clientWidth
+        const containerHeight = viewerElement.clientHeight
+        console.log('[EpubRenderer] Container dimensions:', containerWidth, 'x', containerHeight)
+
+        // 渲染到容器 - epubjs needs explicit pixel dimensions
+        const epubRendition = epubBook.renderTo(viewerElement, {
+          width: containerWidth || 800,
+          height: containerHeight || 600,
           flow: 'paginated',
           allowScriptedContent: true,
         })
@@ -133,7 +148,7 @@ export function EpubRenderer({
         rendition.destroy()
       }
     }
-  }, [fileUrl, viewerRef.current]) // Re-run when viewerRef is ready
+  }, [fileUrl, viewerElement, onLocationChange, onTextSelect, theme])
 
   // 应用主题
   useEffect(() => {
@@ -169,6 +184,23 @@ export function EpubRenderer({
     rendition.themes.fontSize(`${fontSize}%`)
   }, [fontSize, rendition])
 
+  // Handle window resize
+  useEffect(() => {
+    if (!rendition || !viewerElement) return
+
+    const handleResize = () => {
+      const width = viewerElement.clientWidth
+      const height = viewerElement.clientHeight
+      console.log('[EpubRenderer] Resizing to:', width, 'x', height)
+      rendition.resize(width, height)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [rendition, viewerElement])
+
   const goToPrev = () => {
     rendition?.prev()
   }
@@ -194,14 +226,6 @@ export function EpubRenderer({
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full bg-slate-900">
-        <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-      </div>
-    )
-  }
-
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-slate-900 p-8">
@@ -212,7 +236,7 @@ export function EpubRenderer({
   }
 
   return (
-    <div className="flex h-full bg-slate-900">
+    <div className="flex absolute inset-0 bg-slate-900">
       {/* 目录侧边栏 */}
       {showToc && (
         <div className="w-80 bg-slate-800 border-r border-slate-700 overflow-y-auto">
@@ -294,9 +318,15 @@ export function EpubRenderer({
         {/* EPUB 查看器 */}
         <div
           ref={viewerRef}
-          className="flex-1 overflow-hidden"
+          className="flex-1 overflow-hidden relative"
           style={{ background: theme === 'dark' ? '#0f172a' : '#ffffff' }}
-        />
+        >
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+              <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -352,28 +352,24 @@ export default function ReaderPage() {
     if (book.format === 'pdf' && book.file_url) {
       console.log('[Reader] Rendering PDF')
       return (
-        <div className="h-full">
-          <PdfRenderer
-            fileUrl={book.file_url}
-            currentPage={currentParaIdx + 1}
-            onPageChange={(page) => setCurrentParaIdx(page - 1)}
-          />
-        </div>
+        <PdfRenderer
+          fileUrl={book.file_url}
+          currentPage={currentParaIdx + 1}
+          onPageChange={(page) => setCurrentParaIdx(page - 1)}
+        />
       )
     }
 
     if (book.format === 'epub' && book.file_url) {
       console.log('[Reader] Rendering EPUB')
       return (
-        <div className="h-full">
-          <EpubRenderer
-            fileUrl={book.file_url}
-            onLocationChange={(location) => {
-              console.log('[Reader] EPUB location changed:', location)
-              saveProgress(currentParaIdx)
-            }}
-          />
-        </div>
+        <EpubRenderer
+          fileUrl={book.file_url}
+          onLocationChange={(location) => {
+            console.log('[Reader] EPUB location changed:', location)
+            saveProgress(currentParaIdx)
+          }}
+        />
       )
     }
 
@@ -488,7 +484,7 @@ export default function ReaderPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden relative">
         {renderContent()}
       </main>
 

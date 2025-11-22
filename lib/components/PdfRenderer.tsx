@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Loader2, Menu } from 'lucide-react'
 
 // Initialize PDF.js worker using local build
 if (typeof window !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
@@ -39,6 +39,8 @@ export function PdfRenderer({
   const [loading, setLoading] = useState(true)
   const [rendering, setRendering] = useState(false)
   const [error, setError] = useState<string>('')
+  const [outline, setOutline] = useState<any[]>([])
+  const [showOutline, setShowOutline] = useState(false)
 
   // 加载 PDF
   useEffect(() => {
@@ -58,6 +60,20 @@ export function PdfRenderer({
 
         setPdf(pdfDoc)
         setNumPages(pdfDoc.numPages)
+
+        // Try to load outline/bookmarks
+        try {
+          const pdfOutline = await pdfDoc.getOutline()
+          if (pdfOutline && pdfOutline.length > 0) {
+            console.log('[PdfRenderer] Outline loaded:', pdfOutline.length, 'items')
+            setOutline(pdfOutline)
+          } else {
+            console.log('[PdfRenderer] No outline available')
+          }
+        } catch (err) {
+          console.log('[PdfRenderer] Could not load outline:', err)
+        }
+
         setLoading(false)
       } catch (error: any) {
         console.error('[PdfRenderer] Error loading PDF:', error)
@@ -155,6 +171,29 @@ export function PdfRenderer({
     setScale(prev => Math.max(prev - 0.25, 0.5))
   }
 
+  const goToOutlineItem = async (dest: any) => {
+    if (!pdf) return
+
+    try {
+      let destArray = dest
+
+      // If dest is a string, we need to get the actual destination
+      if (typeof dest === 'string') {
+        destArray = await pdf.getDestination(dest)
+      }
+
+      if (destArray && destArray[0]) {
+        // Get page reference
+        const pageRef = destArray[0]
+        const pageIndex = await pdf.getPageIndex(pageRef)
+        setPageNum(pageIndex + 1) // pageIndex is 0-based, pageNum is 1-based
+        setShowOutline(false)
+      }
+    } catch (err) {
+      console.error('[PdfRenderer] Error navigating to outline item:', err)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -172,11 +211,55 @@ export function PdfRenderer({
     )
   }
 
+  // Recursive component to render outline items
+  const OutlineItem = ({ item, level = 0 }: { item: any; level?: number }) => (
+    <div>
+      <button
+        onClick={() => goToOutlineItem(item.dest)}
+        className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded transition-colors"
+        style={{ paddingLeft: `${12 + level * 16}px` }}
+      >
+        {item.title}
+      </button>
+      {item.items && item.items.length > 0 && (
+        <div>
+          {item.items.map((subItem: any, idx: number) => (
+            <OutlineItem key={idx} item={subItem} level={level + 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
   return (
-    <div className="flex flex-col h-full bg-slate-900">
+    <div className="flex flex-col absolute inset-0 bg-slate-900">
+      {/* Outline Sidebar */}
+      {showOutline && outline.length > 0 && (
+        <div className="absolute left-0 top-0 bottom-0 w-80 bg-slate-800 border-r border-slate-700 overflow-y-auto z-10">
+          <div className="p-4 border-b border-slate-700">
+            <h3 className="text-lg font-semibold text-white">Table of Contents</h3>
+          </div>
+          <div className="p-2">
+            {outline.map((item, index) => (
+              <OutlineItem key={index} item={item} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 工具栏 */}
       <div className="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
         <div className="flex items-center space-x-2">
+          {outline.length > 0 && (
+            <button
+              onClick={() => setShowOutline(!showOutline)}
+              className="p-2 hover:bg-slate-700 rounded"
+              title="Toggle Table of Contents"
+            >
+              <Menu className="w-5 h-5 text-white" />
+            </button>
+          )}
+
           <button
             onClick={goToPrevPage}
             disabled={pageNum <= 1}
