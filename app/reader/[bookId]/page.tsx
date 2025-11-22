@@ -75,6 +75,7 @@ export default function ReaderPage() {
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0)
   const [viewMode, setViewMode] = useState<ViewMode>('translated')
+  const [useNativeViewer, setUseNativeViewer] = useState(true) // Toggle between native and paragraph view
 
   // Caches
   const [translationCache, setTranslationCache] = useState<Map<number, string>>(new Map())
@@ -346,10 +347,10 @@ export default function ReaderPage() {
 
   // Render native PDF/EPUB viewer or fallback to paragraph view
   const renderContent = () => {
-    console.log('[Reader] renderContent called, book format:', book.format, 'file_url:', book.file_url)
+    console.log('[Reader] renderContent called, book format:', book.format, 'file_url:', book.file_url, 'useNativeViewer:', useNativeViewer)
 
-    // Native rendering for PDF/EPUB
-    if (book.format === 'pdf' && book.file_url) {
+    // Native rendering for PDF/EPUB (if enabled)
+    if (useNativeViewer && book.format === 'pdf' && book.file_url) {
       console.log('[Reader] Rendering PDF')
       return (
         <PdfRenderer
@@ -360,7 +361,7 @@ export default function ReaderPage() {
       )
     }
 
-    if (book.format === 'epub' && book.file_url) {
+    if (useNativeViewer && book.format === 'epub' && book.file_url) {
       console.log('[Reader] Rendering EPUB')
       return (
         <EpubRenderer
@@ -373,7 +374,7 @@ export default function ReaderPage() {
       )
     }
 
-    console.log('[Reader] Rendering fallback paragraph view')
+    console.log('[Reader] Rendering paragraph view for translation/audio')
 
     // Fallback: paragraph-based view for TXT or legacy books
     return (
@@ -468,8 +469,22 @@ export default function ReaderPage() {
             </div>
 
             <div className="flex items-center space-x-2">
-              {/* Only show view mode toggle for paragraph view */}
-              {!['pdf', 'epub'].includes(book.format || '') && (
+              {/* Toggle between native and paragraph view for PDF/EPUB */}
+              {['pdf', 'epub'].includes(book.format || '') && paragraphs.length > 0 && (
+                <button
+                  onClick={() => setUseNativeViewer(!useNativeViewer)}
+                  className="flex items-center space-x-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                  title={useNativeViewer ? '切换到翻译模式' : '切换到原文阅读'}
+                >
+                  <BookOpen className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm text-white">
+                    {useNativeViewer ? '原文阅读' : '翻译播放'}
+                  </span>
+                </button>
+              )}
+
+              {/* View mode toggle for paragraph view */}
+              {(!useNativeViewer || !['pdf', 'epub'].includes(book.format || '')) && (
                 <button
                   onClick={cycleViewMode}
                   className="flex items-center space-x-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
