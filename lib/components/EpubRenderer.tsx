@@ -16,6 +16,8 @@ export function EpubRenderer({
   onTextSelect,
 }: EpubRendererProps) {
   const viewerRef = useRef<HTMLDivElement>(null)
+  const loadedRef = useRef(false)
+
   const [book, setBook] = useState<Book | null>(null)
   const [rendition, setRendition] = useState<Rendition | null>(null)
   const [loading, setLoading] = useState(true)
@@ -28,12 +30,21 @@ export function EpubRenderer({
 
   // 加载 EPUB
   useEffect(() => {
-    if (!viewerRef.current || !fileUrl) return
+    if (!viewerRef.current || !fileUrl) {
+      console.log('[EpubRenderer] Missing viewerRef or fileUrl')
+      return
+    }
+
+    if (loadedRef.current) {
+      console.log('[EpubRenderer] Already loaded, skipping')
+      return
+    }
 
     const loadEpub = async () => {
       try {
         setLoading(true)
         setError('')
+        loadedRef.current = true
         console.log('[EpubRenderer] Loading EPUB from:', fileUrl)
 
         // Create EPUB book with options
