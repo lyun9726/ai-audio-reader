@@ -30,6 +30,18 @@ const PdfRenderer = dynamic(
   }
 )
 
+const DualLanguagePdfRenderer = dynamic(
+  () => import('@/lib/components/DualLanguagePdfRenderer').then(mod => ({ default: mod.DualLanguagePdfRenderer })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+      </div>
+    )
+  }
+)
+
 const EpubRenderer = dynamic(
   () => import('@/lib/components/EpubRenderer').then(mod => {
     console.log('[Reader] EpubRenderer module loaded:', mod)
@@ -76,6 +88,7 @@ export default function ReaderPage() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0)
   const [viewMode, setViewMode] = useState<ViewMode>('translated')
   const [useNativeViewer, setUseNativeViewer] = useState(true) // Toggle between native and paragraph view
+  const [useDualLanguageView, setUseDualLanguageView] = useState(true) // Use dual-language PDF viewer
 
   // Caches
   const [translationCache, setTranslationCache] = useState<Map<number, string>>(new Map())
@@ -348,6 +361,26 @@ export default function ReaderPage() {
   // Render native PDF/EPUB viewer or fallback to paragraph view
   const renderContent = () => {
     console.log('[Reader] renderContent called, book format:', book.format, 'file_url:', book.file_url, 'useNativeViewer:', useNativeViewer)
+
+    // Dual-language rendering for PDF (if enabled and has paragraphs)
+    if (useNativeViewer && useDualLanguageView && book.format === 'pdf' && book.file_url && paragraphs.length > 0) {
+      console.log('[Reader] Rendering Dual-Language PDF')
+      return (
+        <DualLanguagePdfRenderer
+          fileUrl={book.file_url}
+          bookId={bookId}
+          paragraphs={paragraphs}
+          currentParaIdx={currentParaIdx}
+          isPlaying={isPlaying}
+          playbackSpeed={playbackSpeed}
+          onPlayPause={handlePlayPause}
+          onParagraphChange={setCurrentParaIdx}
+          onSpeedChange={setPlaybackSpeed}
+          translationCache={translationCache}
+          onTranslateRequest={translateParagraph}
+        />
+      )
+    }
 
     // Native rendering for PDF/EPUB (if enabled)
     if (useNativeViewer && book.format === 'pdf' && book.file_url) {
