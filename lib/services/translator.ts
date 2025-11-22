@@ -37,7 +37,9 @@ export async function translateText(
       console.log('[Translator] Starting translation...')
       console.log('[Translator] Base URL:', process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1')
       console.log('[Translator] API Key exists:', !!process.env.OPENAI_API_KEY)
+      console.log('[Translator] API Key prefix:', process.env.OPENAI_API_KEY?.substring(0, 10) + '...')
       console.log('[Translator] Source:', sourceLanguage, '→ Target:', targetLanguage)
+      console.log('[Translator] Text length:', text.length, 'characters')
     } else {
       console.log(`[Translator] Retry attempt ${retryCount}...`)
     }

@@ -40,6 +40,7 @@ export async function POST(
     }
 
     // Get the specific paragraph
+    console.log(`[Stream Translate] Fetching paragraph ${paraIdx} for book ${bookId}`)
     const { data: paragraph, error: paraError } = await supabase
       .from('book_paragraphs')
       .select('id, text_original, text_translated, para_idx')
@@ -47,12 +48,30 @@ export async function POST(
       .eq('para_idx', paraIdx)
       .single()
 
-    if (paraError || !paragraph) {
+    if (paraError) {
+      console.error('[Stream Translate] Paragraph fetch error:', paraError)
+      // Check if any paragraphs exist for this book
+      const { count } = await supabase
+        .from('book_paragraphs')
+        .select('*', { count: 'exact', head: true })
+        .eq('book_id', bookId)
+
+      console.error(`[Stream Translate] Total paragraphs for book ${bookId}:`, count)
+      return NextResponse.json(
+        { error: `Paragraph not found. Book has ${count || 0} paragraphs. Please re-upload the book.` },
+        { status: 404 }
+      )
+    }
+
+    if (!paragraph) {
+      console.error('[Stream Translate] Paragraph is null')
       return NextResponse.json(
         { error: 'Paragraph not found' },
         { status: 404 }
       )
     }
+
+    console.log(`[Stream Translate] Found paragraph ${paraIdx}, length: ${paragraph.text_original?.length || 0}`)
 
     // If already translated, return it
     if (paragraph.text_translated) {
