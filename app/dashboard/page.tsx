@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/contexts/AuthContext'
-import { BookOpen, Plus, Upload, LogOut, Loader2, Play } from 'lucide-react'
+import { BookOpen, Plus, Upload, LogOut, Loader2, Play, Trash2 } from 'lucide-react'
 import { Book } from '@/lib/types'
 
 export default function DashboardPage() {
@@ -29,6 +29,32 @@ export default function DashboardPage() {
       console.error('Failed to load books:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteBook = async (bookId: string, bookTitle: string, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent navigation to reader
+
+    if (!confirm(`确定要删除《${bookTitle}》吗?此操作无法撤销。`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/books/${bookId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        // Remove book from UI
+        setBooks(books.filter(book => book.id !== bookId))
+        alert('书籍已删除')
+      } else {
+        const error = await response.json()
+        alert('删除失败: ' + (error.error || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Failed to delete book:', error)
+      alert('删除失败,请重试')
     }
   }
 
@@ -141,14 +167,21 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Start Reading Button */}
-                <div className="px-4 pb-4">
+                {/* Action Buttons */}
+                <div className="px-4 pb-4 flex gap-2">
                   <button
                     onClick={() => router.push(`/reader/${book.id}`)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all text-sm font-medium"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all text-sm font-medium"
                   >
                     <Play className="w-4 h-4" />
                     <span>开始阅读</span>
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteBook(book.id, book.title, e)}
+                    className="px-4 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-all"
+                    title="删除书籍"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
