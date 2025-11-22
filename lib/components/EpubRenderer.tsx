@@ -19,6 +19,7 @@ export function EpubRenderer({
   const [book, setBook] = useState<Book | null>(null)
   const [rendition, setRendition] = useState<Rendition | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string>('')
   const [currentLocation, setCurrentLocation] = useState('')
   const [toc, setToc] = useState<any[]>([])
   const [showToc, setShowToc] = useState(false)
@@ -32,9 +33,13 @@ export function EpubRenderer({
     const loadEpub = async () => {
       try {
         setLoading(true)
+        setError('')
+        console.log('[EpubRenderer] Loading EPUB from:', fileUrl)
 
         const epubBook = ePub(fileUrl)
         setBook(epubBook)
+
+        console.log('[EpubRenderer] EPUB book created, rendering...')
 
         // 渲染到容器
         const epubRendition = epubBook.renderTo(viewerRef.current!, {
@@ -48,10 +53,12 @@ export function EpubRenderer({
 
         // 显示第一章
         await epubRendition.display()
+        console.log('[EpubRenderer] EPUB displayed successfully')
 
         // 加载目录
         const navigation = await epubBook.loaded.navigation
         setToc(navigation.toc)
+        console.log('[EpubRenderer] Table of contents loaded:', navigation.toc.length, 'chapters')
 
         // 应用主题
         if (theme === 'dark') {
@@ -64,6 +71,7 @@ export function EpubRenderer({
         }
 
         setLoading(false)
+        console.log('[EpubRenderer] EPUB fully loaded and ready')
 
         // 监听位置变化
         epubRendition.on('relocated', (location: any) => {
@@ -84,8 +92,9 @@ export function EpubRenderer({
             onTextSelect(text)
           }
         })
-      } catch (error) {
-        console.error('Error loading EPUB:', error)
+      } catch (error: any) {
+        console.error('[EpubRenderer] Error loading EPUB:', error)
+        setError(error.message || 'Failed to load EPUB')
         setLoading(false)
       }
     }
@@ -163,6 +172,15 @@ export function EpubRenderer({
     return (
       <div className="flex items-center justify-center h-full bg-slate-900">
         <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-slate-900 p-8">
+        <div className="text-red-400 mb-4">Failed to load EPUB</div>
+        <div className="text-sm text-slate-400">{error}</div>
       </div>
     )
   }
