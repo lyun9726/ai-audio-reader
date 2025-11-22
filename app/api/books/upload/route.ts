@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     const description = formData.get('description') as string || null
     const sourceLang = formData.get('sourceLang') as string || 'en'
     const targetLang = formData.get('targetLang') as string || 'zh'
+    const extractedText = formData.get('extractedText') as string || null // Client-side extracted text
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -102,17 +103,30 @@ export async function POST(request: Request) {
 
     if (format === 'pdf' || format === 'epub') {
       try {
-        console.log('[Upload] Extracting text from', format.toUpperCase(), '...')
-        const buffer = Buffer.from(arrayBuffer)
-        const { content, paragraphs } = await processBookFile(buffer, format)
+        // Use client-extracted text if available (for PDF)
+        let fullText = extractedText
 
-        // Use extracted metadata if not provided
-        if (!extractedAuthor && content.author) {
-          extractedAuthor = content.author
+        if (!fullText) {
+          // Fall back to server-side extraction for EPUB
+          console.log('[Upload] Extracting text from', format.toUpperCase(), '...')
+          const buffer = Buffer.from(arrayBuffer)
+          const { content, paragraphs: extractedParas } = await processBookFile(buffer, format)
+          fullText = content.text
+          extractedAuthor = extractedAuthor || content.author
+        } else {
+          console.log('[Upload] Using client-extracted text, length:', fullText.length)
         }
 
+        if (!fullText || fullText.trim().length === 0) {
+          throw new Error('No text extracted from file')
+        }
+
+        // Split into paragraphs
+        const { splitIntoParagraphs } = await import('@/lib/services/textExtractor')
+        const paragraphs = splitIntoParagraphs(fullText)
+
         totalParagraphs = paragraphs.length
-        console.log('[Upload] ✓ Extracted', totalParagraphs, 'paragraphs')
+        console.log('[Upload] ✓ Split into', totalParagraphs, 'paragraphs')
 
         // Create book record first
         const { data: book, error: bookError } = await supabase

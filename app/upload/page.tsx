@@ -51,6 +51,34 @@ export default function UploadPage() {
     }
   }
 
+  const extractPdfText = async (file: File): Promise<string> => {
+    const pdfjsLib = await import('pdfjs-dist')
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.min.mjs',
+      import.meta.url
+    ).toString()
+
+    const arrayBuffer = await file.arrayBuffer()
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+    const numPages = pdf.numPages
+
+    const textParts: string[] = []
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum)
+      const textContent = await page.getTextContent()
+      const pageText = textContent.items.map((item: any) => item.str).join(' ')
+      if (pageText.trim()) {
+        textParts.push(pageText)
+      }
+
+      if (pageNum % 10 === 0) {
+        setProgress(`Extracting text: ${pageNum}/${numPages} pages...`)
+      }
+    }
+
+    return textParts.join('\n\n')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -77,6 +105,16 @@ export default function UploadPage() {
       formDataToSend.append('sourceLang', formData.sourceLang)
       formDataToSend.append('targetLang', formData.targetLang)
 
+      // Extract text on client-side for PDF files
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+        setProgress('Extracting text from PDF...')
+        const extractedText = await extractPdfText(file)
+        formDataToSend.append('extractedText', extractedText)
+        console.log('[Upload] Extracted text length:', extractedText.length)
+      }
+
+      setProgress('Uploading to server...')
+
       const response = await fetch('/api/books/upload', {
         method: 'POST',
         body: formDataToSend,
@@ -85,7 +123,7 @@ export default function UploadPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Upload failed')
+        throw new Error(data.error || data.details || 'Upload failed')
       }
 
       setProgress('Processing complete!')
@@ -95,6 +133,7 @@ export default function UploadPage() {
         router.push('/dashboard')
       }, 1500)
     } catch (err: any) {
+      console.error('[Upload] Error:', err)
       setError(err.message || 'An error occurred during upload')
       setProgress('')
     } finally {
