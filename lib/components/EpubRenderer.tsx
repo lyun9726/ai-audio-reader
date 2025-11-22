@@ -30,8 +30,13 @@ export function EpubRenderer({
 
   // 加载 EPUB
   useEffect(() => {
-    if (!viewerRef.current || !fileUrl) {
-      console.log('[EpubRenderer] Missing viewerRef or fileUrl')
+    if (!fileUrl) {
+      console.log('[EpubRenderer] Missing fileUrl')
+      return
+    }
+
+    if (!viewerRef.current) {
+      console.log('[EpubRenderer] viewerRef not ready yet, will retry')
       return
     }
 
@@ -128,7 +133,7 @@ export function EpubRenderer({
         rendition.destroy()
       }
     }
-  }, [fileUrl])
+  }, [fileUrl, viewerRef.current]) // Re-run when viewerRef is ready
 
   // 应用主题
   useEffect(() => {
