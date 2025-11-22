@@ -29,6 +29,7 @@ export function PdfRenderer({
 }: PdfRendererProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const renderTaskRef = useRef<any>(null)
 
   const [pdf, setPdf] = useState<any>(null)
   const [pageNum, setPageNum] = useState(currentPage)
@@ -70,22 +71,25 @@ export function PdfRenderer({
   useEffect(() => {
     if (!pdf || !canvasRef.current) return
 
-    let renderTask: any = null
-
     const renderPage = async () => {
       try {
-        setRendering(true)
-
         // Cancel any ongoing render task
-        if (renderTask) {
-          renderTask.cancel()
+        if (renderTaskRef.current) {
+          console.log('[PdfRenderer] Cancelling previous render task')
+          renderTaskRef.current.cancel()
+          renderTaskRef.current = null
         }
+
+        setRendering(true)
 
         const page = await pdf.getPage(pageNum)
         const viewport = page.getViewport({ scale })
 
-        const canvas = canvasRef.current!
-        const context = canvas.getContext('2d')!
+        const canvas = canvasRef.current
+        if (!canvas) return
+
+        const context = canvas.getContext('2d')
+        if (!context) return
 
         canvas.height = viewport.height
         canvas.width = viewport.width
@@ -95,9 +99,9 @@ export function PdfRenderer({
           viewport: viewport,
         }
 
-        renderTask = page.render(renderContext)
-        await renderTask.promise
-        renderTask = null
+        renderTaskRef.current = page.render(renderContext)
+        await renderTaskRef.current.promise
+        renderTaskRef.current = null
         setRendering(false)
 
         // 通知父组件页码变化
@@ -110,16 +114,19 @@ export function PdfRenderer({
         } else {
           console.error('[PdfRenderer] Error rendering page:', error)
         }
+        renderTaskRef.current = null
         setRendering(false)
       }
     }
 
     renderPage()
 
-    // Cleanup function to cancel rendering on unmount
+    // Cleanup function to cancel rendering on unmount or dependency change
     return () => {
-      if (renderTask) {
-        renderTask.cancel()
+      if (renderTaskRef.current) {
+        console.log('[PdfRenderer] Cleanup: cancelling render task')
+        renderTaskRef.current.cancel()
+        renderTaskRef.current = null
       }
     }
   }, [pdf, pageNum, scale])
