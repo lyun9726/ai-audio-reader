@@ -63,11 +63,12 @@ export async function extractPdfText(buffer: Buffer): Promise<ExtractedContent> 
 
     // Get metadata
     const metadata = await pdfDoc.getMetadata()
+    const info = metadata.info as any
 
     return {
       text: fullText,
-      title: metadata.info?.Title || undefined,
-      author: metadata.info?.Author || undefined,
+      title: info?.Title || undefined,
+      author: info?.Author || undefined,
       totalPages: numPages,
     }
   } catch (error: any) {
