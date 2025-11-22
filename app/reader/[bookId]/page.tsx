@@ -20,12 +20,32 @@ import { Book, BookParagraph } from '@/lib/types'
 // Dynamic import to avoid SSR issues with PDF.js and EPUB.js
 const PdfRenderer = dynamic(
   () => import('@/lib/components/PdfRenderer').then(mod => ({ default: mod.PdfRenderer })),
-  { ssr: false, loading: () => <div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 text-blue-400 animate-spin" /></div> }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+      </div>
+    )
+  }
 )
 
 const EpubRenderer = dynamic(
-  () => import('@/lib/components/EpubRenderer').then(mod => ({ default: mod.EpubRenderer })),
-  { ssr: false, loading: () => <div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 text-blue-400 animate-spin" /></div> }
+  () => import('@/lib/components/EpubRenderer').then(mod => {
+    console.log('[Reader] EpubRenderer module loaded:', mod)
+    return { default: mod.EpubRenderer }
+  }),
+  {
+    ssr: false,
+    loading: () => {
+      console.log('[Reader] Loading EpubRenderer...')
+      return (
+        <div className="flex items-center justify-center h-full">
+          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+        </div>
+      )
+    }
+  }
 )
 
 type ViewMode = 'original' | 'translated' | 'dual' | 'native'
