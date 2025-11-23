@@ -333,28 +333,62 @@ export default function UploadPage() {
                   </button>
 
                   {showSourceDropdown && (
-                    <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg shadow-xl max-h-80 overflow-hidden">
+                    <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg shadow-xl max-h-96 overflow-hidden flex flex-col">
                       {/* 搜索框 */}
-                      <div className="p-2 border-b border-slate-600 sticky top-0 bg-slate-700">
+                      <div className="p-2 border-b border-slate-600 bg-slate-700 flex-shrink-0">
                         <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                           <input
                             type="text"
                             placeholder="搜索语言..."
                             value={sourceLangSearch}
                             onChange={(e) => setSourceLangSearch(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
                             className="w-full pl-10 pr-4 py-2 bg-slate-600 border border-slate-500 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            autoFocus
                           />
                         </div>
                       </div>
 
-                      {/* 常用语言 */}
-                      {!sourceLangSearch && (
-                        <div className="border-b border-slate-600">
-                          <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800">
-                            常用语言
+                      {/* 语言列表容器 - 可滚动 */}
+                      <div className="overflow-y-auto flex-1">
+                        {/* 常用语言 */}
+                        {!sourceLangSearch && (
+                          <div className="border-b border-slate-600">
+                            <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800 sticky top-0">
+                              常用语言
+                            </div>
+                            <div className="max-h-48 overflow-y-auto">
+                              {LANGUAGE_GROUPS.common.map((lang) => (
+                                <button
+                                  key={lang.code}
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData(prev => ({ ...prev, sourceLang: lang.code }))
+                                    setShowSourceDropdown(false)
+                                    setSourceLangSearch('')
+                                  }}
+                                  className={`w-full px-4 py-2 text-left hover:bg-slate-600 transition-colors ${
+                                    formData.sourceLang === lang.code ? 'bg-blue-600' : ''
+                                  }`}
+                                >
+                                  <div className="text-white text-sm">{lang.name}</div>
+                                  <div className="text-slate-400 text-xs">{lang.nativeName}</div>
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                          {LANGUAGE_GROUPS.common.map((lang) => (
+                        )}
+
+                        {/* 所有语言 */}
+                        <div>
+                          {!sourceLangSearch && (
+                            <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800 sticky top-0">
+                              所有语言
+                            </div>
+                          )}
+                          {filteredSourceLanguages.map((lang) => (
                             <button
                               key={lang.code}
                               type="button"
@@ -372,32 +406,6 @@ export default function UploadPage() {
                             </button>
                           ))}
                         </div>
-                      )}
-
-                      {/* 所有语言 */}
-                      <div className="overflow-y-auto max-h-60">
-                        {!sourceLangSearch && (
-                          <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800 sticky top-0">
-                            所有语言
-                          </div>
-                        )}
-                        {filteredSourceLanguages.map((lang) => (
-                          <button
-                            key={lang.code}
-                            type="button"
-                            onClick={() => {
-                              setFormData(prev => ({ ...prev, sourceLang: lang.code }))
-                              setShowSourceDropdown(false)
-                              setSourceLangSearch('')
-                            }}
-                            className={`w-full px-4 py-2 text-left hover:bg-slate-600 transition-colors ${
-                              formData.sourceLang === lang.code ? 'bg-blue-600' : ''
-                            }`}
-                          >
-                            <div className="text-white text-sm">{lang.name}</div>
-                            <div className="text-slate-400 text-xs">{lang.nativeName}</div>
-                          </button>
-                        ))}
                       </div>
                     </div>
                   )}
@@ -424,28 +432,62 @@ export default function UploadPage() {
                   </button>
 
                   {showTargetDropdown && (
-                    <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg shadow-xl max-h-80 overflow-hidden">
+                    <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg shadow-xl max-h-96 overflow-hidden flex flex-col">
                       {/* 搜索框 */}
-                      <div className="p-2 border-b border-slate-600 sticky top-0 bg-slate-700">
+                      <div className="p-2 border-b border-slate-600 bg-slate-700 flex-shrink-0">
                         <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                           <input
                             type="text"
                             placeholder="搜索语言..."
                             value={targetLangSearch}
                             onChange={(e) => setTargetLangSearch(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
                             className="w-full pl-10 pr-4 py-2 bg-slate-600 border border-slate-500 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            autoFocus
                           />
                         </div>
                       </div>
 
-                      {/* 常用语言 */}
-                      {!targetLangSearch && (
-                        <div className="border-b border-slate-600">
-                          <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800">
-                            常用语言
+                      {/* 语言列表容器 - 可滚动 */}
+                      <div className="overflow-y-auto flex-1">
+                        {/* 常用语言 */}
+                        {!targetLangSearch && (
+                          <div className="border-b border-slate-600">
+                            <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800 sticky top-0">
+                              常用语言
+                            </div>
+                            <div className="max-h-48 overflow-y-auto">
+                              {LANGUAGE_GROUPS.common.map((lang) => (
+                                <button
+                                  key={lang.code}
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData(prev => ({ ...prev, targetLang: lang.code }))
+                                    setShowTargetDropdown(false)
+                                    setTargetLangSearch('')
+                                  }}
+                                  className={`w-full px-4 py-2 text-left hover:bg-slate-600 transition-colors ${
+                                    formData.targetLang === lang.code ? 'bg-blue-600' : ''
+                                  }`}
+                                >
+                                  <div className="text-white text-sm">{lang.name}</div>
+                                  <div className="text-slate-400 text-xs">{lang.nativeName}</div>
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                          {LANGUAGE_GROUPS.common.map((lang) => (
+                        )}
+
+                        {/* 所有语言 */}
+                        <div>
+                          {!targetLangSearch && (
+                            <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800 sticky top-0">
+                              所有语言
+                            </div>
+                          )}
+                          {filteredTargetLanguages.map((lang) => (
                             <button
                               key={lang.code}
                               type="button"
@@ -463,32 +505,6 @@ export default function UploadPage() {
                             </button>
                           ))}
                         </div>
-                      )}
-
-                      {/* 所有语言 */}
-                      <div className="overflow-y-auto max-h-60">
-                        {!targetLangSearch && (
-                          <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800 sticky top-0">
-                            所有语言
-                          </div>
-                        )}
-                        {filteredTargetLanguages.map((lang) => (
-                          <button
-                            key={lang.code}
-                            type="button"
-                            onClick={() => {
-                              setFormData(prev => ({ ...prev, targetLang: lang.code }))
-                              setShowTargetDropdown(false)
-                              setTargetLangSearch('')
-                            }}
-                            className={`w-full px-4 py-2 text-left hover:bg-slate-600 transition-colors ${
-                              formData.targetLang === lang.code ? 'bg-blue-600' : ''
-                            }`}
-                          >
-                            <div className="text-white text-sm">{lang.name}</div>
-                            <div className="text-slate-400 text-xs">{lang.nativeName}</div>
-                          </button>
-                        ))}
                       </div>
                     </div>
                   )}
