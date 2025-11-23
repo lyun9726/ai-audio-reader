@@ -88,21 +88,33 @@ export async function POST(request: Request) {
       try {
         let fullText = extractedText
 
-        // 如果没有提取的文本,需要下载文件并提取
-        if (!fullText && format === 'epub') {
-          console.log('[Process] Downloading file for text extraction...')
+        // 如果没有提取的文本,需要下载文件并提取（PDF和EPUB都需要）
+        if (!fullText || fullText.trim().length === 0) {
+          console.log('[Process] No client-extracted text, downloading file for server-side extraction...')
+          console.log('[Process] File URL:', fileUrl)
+
           const fileResponse = await fetch(fileUrl)
+          if (!fileResponse.ok) {
+            throw new Error(`Failed to download file: ${fileResponse.status}`)
+          }
+
           const arrayBuffer = await fileResponse.arrayBuffer()
           const buffer = Buffer.from(arrayBuffer)
+
+          console.log('[Process] Downloaded', buffer.length, 'bytes, extracting text...')
 
           const { processBookFile } = await import('@/lib/services/textExtractor')
           const { content } = await processBookFile(buffer, format)
           fullText = content.text
           extractedAuthor = extractedAuthor || content.author || null
+
+          console.log('[Process] Extracted', fullText.length, 'characters')
+        } else {
+          console.log('[Process] Using client-extracted text:', fullText.length, 'characters')
         }
 
         if (!fullText || fullText.trim().length === 0) {
-          throw new Error('No text extracted from file')
+          throw new Error('No text extracted from file. The PDF may be scanned images or password protected.')
         }
 
         // 分段
