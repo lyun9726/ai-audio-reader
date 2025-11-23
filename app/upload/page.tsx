@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/contexts/AuthContext'
-import { BookOpen, Upload, ArrowLeft, Loader2, FileText, Languages } from 'lucide-react'
+import { BookOpen, Upload, ArrowLeft, Loader2, FileText, Languages, Search } from 'lucide-react'
+import { LANGUAGE_GROUPS, searchLanguages, type Language } from '@/lib/constants/languages'
 
 export default function UploadPage() {
   const router = useRouter()
@@ -20,6 +21,41 @@ export default function UploadPage() {
     targetLang: 'zh',
   })
   const [file, setFile] = useState<File | null>(null)
+  const [sourceLangSearch, setSourceLangSearch] = useState('')
+  const [targetLangSearch, setTargetLangSearch] = useState('')
+  const [showSourceDropdown, setShowSourceDropdown] = useState(false)
+  const [showTargetDropdown, setShowTargetDropdown] = useState(false)
+
+  // 筛选语言列表
+  const filteredSourceLanguages = useMemo(() => {
+    if (!sourceLangSearch) return LANGUAGE_GROUPS.all
+    return searchLanguages(sourceLangSearch)
+  }, [sourceLangSearch])
+
+  const filteredTargetLanguages = useMemo(() => {
+    if (!targetLangSearch) return LANGUAGE_GROUPS.all
+    return searchLanguages(targetLangSearch)
+  }, [targetLangSearch])
+
+  // 获取当前选中语言的显示名称
+  const getSelectedLanguage = (code: string) => {
+    const lang = LANGUAGE_GROUPS.all.find(l => l.code === code)
+    return lang ? `${lang.name} (${lang.nativeName})` : code
+  }
+
+  // 点击外部关闭下拉菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('.language-dropdown')) {
+        setShowSourceDropdown(false)
+        setShowTargetDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -277,44 +313,186 @@ export default function UploadPage() {
 
             {/* Language Selection */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              {/* Source Language */}
+              <div className="relative language-dropdown">
                 <label htmlFor="sourceLang" className="block text-sm font-medium text-slate-300 mb-2">
                   <Languages className="inline w-4 h-4 mr-1" />
-                  Original Language
+                  原始语言
                 </label>
-                <select
-                  id="sourceLang"
-                  value={formData.sourceLang}
-                  onChange={(e) => setFormData(prev => ({ ...prev, sourceLang: e.target.value }))}
-                  disabled={uploading}
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-                >
-                  <option value="en">English</option>
-                  <option value="zh">Chinese</option>
-                  <option value="ja">Japanese</option>
-                  <option value="es">Spanish</option>
-                  <option value="fr">French</option>
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowSourceDropdown(!showSourceDropdown)}
+                    disabled={uploading}
+                    className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 flex items-center justify-between"
+                  >
+                    <span className="truncate">{getSelectedLanguage(formData.sourceLang)}</span>
+                    <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {showSourceDropdown && (
+                    <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg shadow-xl max-h-80 overflow-hidden">
+                      {/* 搜索框 */}
+                      <div className="p-2 border-b border-slate-600 sticky top-0 bg-slate-700">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="text"
+                            placeholder="搜索语言..."
+                            value={sourceLangSearch}
+                            onChange={(e) => setSourceLangSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-slate-600 border border-slate-500 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      {/* 常用语言 */}
+                      {!sourceLangSearch && (
+                        <div className="border-b border-slate-600">
+                          <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800">
+                            常用语言
+                          </div>
+                          {LANGUAGE_GROUPS.common.map((lang) => (
+                            <button
+                              key={lang.code}
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, sourceLang: lang.code }))
+                                setShowSourceDropdown(false)
+                                setSourceLangSearch('')
+                              }}
+                              className={`w-full px-4 py-2 text-left hover:bg-slate-600 transition-colors ${
+                                formData.sourceLang === lang.code ? 'bg-blue-600' : ''
+                              }`}
+                            >
+                              <div className="text-white text-sm">{lang.name}</div>
+                              <div className="text-slate-400 text-xs">{lang.nativeName}</div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* 所有语言 */}
+                      <div className="overflow-y-auto max-h-60">
+                        {!sourceLangSearch && (
+                          <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800 sticky top-0">
+                            所有语言
+                          </div>
+                        )}
+                        {filteredSourceLanguages.map((lang) => (
+                          <button
+                            key={lang.code}
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, sourceLang: lang.code }))
+                              setShowSourceDropdown(false)
+                              setSourceLangSearch('')
+                            }}
+                            className={`w-full px-4 py-2 text-left hover:bg-slate-600 transition-colors ${
+                              formData.sourceLang === lang.code ? 'bg-blue-600' : ''
+                            }`}
+                          >
+                            <div className="text-white text-sm">{lang.name}</div>
+                            <div className="text-slate-400 text-xs">{lang.nativeName}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div>
+              {/* Target Language */}
+              <div className="relative language-dropdown">
                 <label htmlFor="targetLang" className="block text-sm font-medium text-slate-300 mb-2">
                   <Languages className="inline w-4 h-4 mr-1" />
-                  Translate To
+                  翻译为
                 </label>
-                <select
-                  id="targetLang"
-                  value={formData.targetLang}
-                  onChange={(e) => setFormData(prev => ({ ...prev, targetLang: e.target.value }))}
-                  disabled={uploading}
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-                >
-                  <option value="zh">Chinese (Simplified)</option>
-                  <option value="en">English</option>
-                  <option value="ja">Japanese</option>
-                  <option value="es">Spanish</option>
-                  <option value="fr">French</option>
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowTargetDropdown(!showTargetDropdown)}
+                    disabled={uploading}
+                    className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 flex items-center justify-between"
+                  >
+                    <span className="truncate">{getSelectedLanguage(formData.targetLang)}</span>
+                    <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {showTargetDropdown && (
+                    <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg shadow-xl max-h-80 overflow-hidden">
+                      {/* 搜索框 */}
+                      <div className="p-2 border-b border-slate-600 sticky top-0 bg-slate-700">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="text"
+                            placeholder="搜索语言..."
+                            value={targetLangSearch}
+                            onChange={(e) => setTargetLangSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-slate-600 border border-slate-500 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      {/* 常用语言 */}
+                      {!targetLangSearch && (
+                        <div className="border-b border-slate-600">
+                          <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800">
+                            常用语言
+                          </div>
+                          {LANGUAGE_GROUPS.common.map((lang) => (
+                            <button
+                              key={lang.code}
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, targetLang: lang.code }))
+                                setShowTargetDropdown(false)
+                                setTargetLangSearch('')
+                              }}
+                              className={`w-full px-4 py-2 text-left hover:bg-slate-600 transition-colors ${
+                                formData.targetLang === lang.code ? 'bg-blue-600' : ''
+                              }`}
+                            >
+                              <div className="text-white text-sm">{lang.name}</div>
+                              <div className="text-slate-400 text-xs">{lang.nativeName}</div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* 所有语言 */}
+                      <div className="overflow-y-auto max-h-60">
+                        {!targetLangSearch && (
+                          <div className="px-3 py-2 text-xs font-semibold text-slate-400 bg-slate-800 sticky top-0">
+                            所有语言
+                          </div>
+                        )}
+                        {filteredTargetLanguages.map((lang) => (
+                          <button
+                            key={lang.code}
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, targetLang: lang.code }))
+                              setShowTargetDropdown(false)
+                              setTargetLangSearch('')
+                            }}
+                            className={`w-full px-4 py-2 text-left hover:bg-slate-600 transition-colors ${
+                              formData.targetLang === lang.code ? 'bg-blue-600' : ''
+                            }`}
+                          >
+                            <div className="text-white text-sm">{lang.name}</div>
+                            <div className="text-slate-400 text-xs">{lang.nativeName}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
