@@ -12,6 +12,7 @@ export default function UploadPage() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [progress, setProgress] = useState('')
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const [formData, setFormData] = useState({
     title: '',
@@ -185,11 +186,42 @@ export default function UploadPage() {
 
     setUploading(true)
     setError('')
-    setProgress('Uploading file...')
+    setUploadProgress(0)
+    setProgress('准备上传...')
 
     try {
+      // Step 1: 提取文本(PDF)
+      let extractedText = ''
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+        setProgress('正在提取文本...')
+        extractedText = await extractPdfText(file)
+        console.log('[Upload] Extracted text length:', extractedText.length)
+      }
+
+      // Step 2: 直接上传文件到Storage (带进度)
+      setProgress('正在上传文件...')
+      const { directUploadWithProgress } = await import('@/lib/services/directUpload')
+
+      const uploadResult = await directUploadWithProgress({
+        file,
+        onProgress: (progress) => {
+          setUploadProgress(progress)
+          setProgress(`上传进度: ${progress.toFixed(1)}%`)
+        },
+        onError: (error) => {
+          console.error('[Upload] Direct upload error:', error)
+        }
+      })
+
+      console.log('[Upload] File uploaded to:', uploadResult.publicUrl)
+
+      // Step 3: 通知后端处理
+      setProgress('正在处理书籍...')
+      setUploadProgress(100)
+
       const formDataToSend = new FormData()
-      formDataToSend.append('file', file)
+      formDataToSend.append('fileUrl', uploadResult.publicUrl)
+      formDataToSend.append('filePath', uploadResult.path)
       formDataToSend.append('title', formData.title)
       formDataToSend.append('author', formData.author)
       formDataToSend.append('description', formData.description)
@@ -201,17 +233,12 @@ export default function UploadPage() {
         formDataToSend.append('coverPreview', coverPreview)
       }
 
-      // Extract text on client-side for PDF files
-      if (file.name.toLowerCase().endsWith('.pdf')) {
-        setProgress('正在提取文本...')
-        const extractedText = await extractPdfText(file)
+      // 添加提取的文本
+      if (extractedText) {
         formDataToSend.append('extractedText', extractedText)
-        console.log('[Upload] Extracted text length:', extractedText.length)
       }
 
-      setProgress('正在上传...')
-
-      const response = await fetch('/api/books/upload', {
+      const response = await fetch('/api/books/process', {
         method: 'POST',
         body: formDataToSend,
       })
@@ -272,9 +299,28 @@ export default function UploadPage() {
           )}
 
           {progress && (
-            <div className="bg-blue-500/10 border border-blue-500/50 text-blue-400 px-4 py-3 rounded-lg mb-6 flex items-center space-x-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>{progress}</span>
+            <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg mb-6 overflow-hidden">
+              {/* 进度条 */}
+              {uploadProgress > 0 && uploadProgress < 100 && (
+                <div className="h-2 bg-slate-700">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              )}
+              {/* 进度文本 */}
+              <div className="px-4 py-3 flex items-center space-x-2">
+                <Loader2 className="w-4 h-4 animate-spin text-blue-400 flex-shrink-0" />
+                <div className="flex-1">
+                  <span className="text-blue-400">{progress}</span>
+                  {uploadProgress > 0 && uploadProgress < 100 && (
+                    <span className="ml-2 text-sm text-blue-300">
+                      ({uploadProgress.toFixed(0)}%)
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
