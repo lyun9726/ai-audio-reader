@@ -21,6 +21,9 @@ export default function UploadPage() {
     targetLang: 'zh',
   })
   const [file, setFile] = useState<File | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [extractingCover, setExtractingCover] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   const [sourceLangSearch, setSourceLangSearch] = useState('')
   const [targetLangSearch, setTargetLangSearch] = useState('')
   const [showSourceDropdown, setShowSourceDropdown] = useState(false)
@@ -57,33 +60,85 @@ export default function UploadPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const processFile = async (selectedFile: File) => {
+    const fileType = selectedFile.name.toLowerCase()
+    if (!fileType.endsWith('.pdf') && !fileType.endsWith('.epub')) {
+      setError('请上传 PDF 或 EPUB 文件')
+      return false
+    }
+
+    // Check file size (50MB limit)
+    const MAX_SIZE = 50 * 1024 * 1024 // 50MB
+    if (selectedFile.size > MAX_SIZE) {
+      const sizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2)
+      setError(`文件过大 (${sizeMB}MB)。最大支持 50MB`)
+      return false
+    }
+
+    // Auto-fill title from filename if empty
+    if (!formData.title) {
+      const filename = selectedFile.name.replace(/\.(pdf|epub)$/i, '')
+      setFormData(prev => ({ ...prev, title: filename }))
+    }
+
+    setFile(selectedFile)
+    setError('')
+
+    // 提取封面
+    setExtractingCover(true)
+    try {
+      if (fileType.endsWith('.pdf')) {
+        const { extractPdfCoverClient } = await import('@/lib/services/coverExtractor')
+        const cover = await extractPdfCoverClient(selectedFile)
+        setCoverPreview(cover)
+      } else if (fileType.endsWith('.epub')) {
+        const { extractEpubCoverClient } = await import('@/lib/services/coverExtractor')
+        const cover = await extractEpubCoverClient(selectedFile)
+        setCoverPreview(cover)
+      }
+    } catch (err) {
+      console.error('封面提取失败:', err)
+      // 封面提取失败不影响上传
+    } finally {
+      setExtractingCover(false)
+    }
+
+    return true
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
     if (selectedFile) {
-      const fileType = selectedFile.name.toLowerCase()
-      if (!fileType.endsWith('.pdf') && !fileType.endsWith('.epub')) {
-        setError('Please upload a PDF or EPUB file')
-        setFile(null)
-        return
-      }
+      processFile(selectedFile)
+    }
+  }
 
-      // Check file size (4MB limit for Vercel free tier)
-      const MAX_SIZE = 4 * 1024 * 1024 // 4MB
-      if (selectedFile.size > MAX_SIZE) {
-        const sizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2)
-        setError(`File too large (${sizeMB}MB). Maximum size is 4MB on hosted version. For larger files, use local development (npm run dev).`)
-        setFile(null)
-        return
-      }
+  // 拖拽上传
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
 
-      // Auto-fill title from filename if empty
-      if (!formData.title) {
-        const filename = selectedFile.name.replace(/\.(pdf|epub)$/i, '')
-        setFormData(prev => ({ ...prev, title: filename }))
-      }
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
 
-      setFile(selectedFile)
-      setError('')
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const droppedFile = e.dataTransfer.files[0]
+    if (droppedFile) {
+      processFile(droppedFile)
     }
   }
 
@@ -141,15 +196,20 @@ export default function UploadPage() {
       formDataToSend.append('sourceLang', formData.sourceLang)
       formDataToSend.append('targetLang', formData.targetLang)
 
+      // 添加封面（如果已提取）
+      if (coverPreview) {
+        formDataToSend.append('coverPreview', coverPreview)
+      }
+
       // Extract text on client-side for PDF files
       if (file.name.toLowerCase().endsWith('.pdf')) {
-        setProgress('Extracting text from PDF...')
+        setProgress('正在提取文本...')
         const extractedText = await extractPdfText(file)
         formDataToSend.append('extractedText', extractedText)
         console.log('[Upload] Extracted text length:', extractedText.length)
       }
 
-      setProgress('Uploading to server...')
+      setProgress('正在上传...')
 
       const response = await fetch('/api/books/upload', {
         method: 'POST',
@@ -219,10 +279,10 @@ export default function UploadPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* File Upload */}
+            {/* File Upload with Drag & Drop */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Book File *
+                📚 书籍文件 *
               </label>
               <div className="relative">
                 <input
@@ -233,32 +293,87 @@ export default function UploadPage() {
                   className="hidden"
                   id="file-upload"
                 />
-                <label
-                  htmlFor="file-upload"
-                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                    file
+                <div
+                  onDragEnter={handleDragEnter}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => !uploading && document.getElementById('file-upload')?.click()}
+                  className={`relative flex items-center gap-6 w-full min-h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                    isDragging
+                      ? 'border-blue-400 bg-blue-500/20 scale-[1.02]'
+                      : file
                       ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-slate-600 bg-slate-700/50 hover:border-slate-500'
+                      : 'border-slate-600 bg-slate-700/50 hover:border-slate-500 hover:bg-slate-700'
                   } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <div className="flex flex-col items-center">
-                    {file ? (
-                      <>
-                        <FileText className="w-10 h-10 text-blue-400 mb-2" />
-                        <p className="text-sm text-blue-400 font-medium">{file.name}</p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          {(file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-10 h-10 text-slate-400 mb-2" />
-                        <p className="text-sm text-slate-300">Click to upload PDF or EPUB</p>
-                        <p className="text-xs text-slate-500 mt-1">Max file size: 50MB</p>
-                      </>
-                    )}
-                  </div>
-                </label>
+                  {file ? (
+                    <>
+                      {/* 封面预览 */}
+                      <div className="flex-shrink-0 ml-6">
+                        <div className="w-24 h-32 bg-slate-900 rounded-lg overflow-hidden border border-slate-600 flex items-center justify-center">
+                          {extractingCover ? (
+                            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+                          ) : coverPreview ? (
+                            <img
+                              src={coverPreview}
+                              alt="Book cover"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <BookOpen className="w-8 h-8 text-slate-600" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 文件信息 */}
+                      <div className="flex-1 py-6 pr-6">
+                        <div className="flex items-start gap-3">
+                          <FileText className="w-8 h-8 text-blue-400 flex-shrink-0 mt-1" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-base text-blue-400 font-medium truncate">
+                              {file.name}
+                            </p>
+                            <p className="text-sm text-slate-400 mt-1">
+                              大小: {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                            {extractingCover && (
+                              <p className="text-xs text-blue-400 mt-2 flex items-center gap-2">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                正在提取封面...
+                              </p>
+                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setFile(null)
+                                setCoverPreview(null)
+                              }}
+                              className="text-xs text-red-400 hover:text-red-300 mt-2"
+                            >
+                              ✕ 移除文件
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center py-8">
+                      <Upload className={`w-12 h-12 mb-3 transition-colors ${
+                        isDragging ? 'text-blue-400' : 'text-slate-400'
+                      }`} />
+                      <p className={`text-base font-medium mb-1 transition-colors ${
+                        isDragging ? 'text-blue-400' : 'text-slate-300'
+                      }`}>
+                        {isDragging ? '松开鼠标上传文件' : '点击选择或拖拽文件到此处'}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        支持 PDF、EPUB 格式，最大 50MB
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

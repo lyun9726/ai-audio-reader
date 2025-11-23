@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     const sourceLang = formData.get('sourceLang') as string || 'en'
     const targetLang = formData.get('targetLang') as string || 'zh'
     const extractedText = formData.get('extractedText') as string || null // Client-side extracted text
+    const coverPreview = formData.get('coverPreview') as string || null // Client-side extracted cover
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -97,6 +98,37 @@ export async function POST(request: Request) {
 
     console.log('[Upload] File uploaded to:', publicUrl)
 
+    // 上传封面（如果有）
+    let coverUrl: string | null = null
+    if (coverPreview) {
+      try {
+        // 将 base64 转换为 Buffer
+        const base64Data = coverPreview.replace(/^data:image\/\w+;base64,/, '')
+        const coverBuffer = Buffer.from(base64Data, 'base64')
+
+        // 上传封面到 Storage
+        const coverFileName = `${user.id}/covers/${Date.now()}_cover.jpg`
+        const { error: coverError } = await supabaseAdmin.storage
+          .from('books')
+          .upload(coverFileName, coverBuffer, {
+            contentType: 'image/jpeg',
+            upsert: false,
+          })
+
+        if (!coverError) {
+          const { data: { publicUrl: coverPublicUrl } } = supabaseAdmin.storage
+            .from('books')
+            .getPublicUrl(coverFileName)
+
+          coverUrl = coverPublicUrl
+          console.log('[Upload] Cover uploaded to:', coverUrl)
+        }
+      } catch (coverErr) {
+        console.error('[Upload] Cover upload failed:', coverErr)
+        // 封面上传失败不影响整体流程
+      }
+    }
+
     // Extract text and paragraphs for translation/TTS features
     let totalParagraphs = 0
     let extractedAuthor = author
@@ -142,6 +174,7 @@ export async function POST(request: Request) {
             format: format,
             file_url: publicUrl,
             s3_original_url: publicUrl,
+            cover_url: coverUrl,
             total_chapters: 1,
             total_paragraphs: totalParagraphs,
           })
@@ -222,6 +255,7 @@ export async function POST(request: Request) {
         format: format,
         file_url: publicUrl,
         s3_original_url: publicUrl,
+        cover_url: coverUrl,
         total_chapters: 1,
         total_paragraphs: totalParagraphs,
       })
