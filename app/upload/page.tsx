@@ -68,11 +68,13 @@ export default function UploadPage() {
       return false
     }
 
-    // Check file size (50MB limit)
-    const MAX_SIZE = 50 * 1024 * 1024 // 50MB
-    if (selectedFile.size > MAX_SIZE) {
+    // Check file size (50MB limit) - strict enforcement
+    const MAX_SIZE = 50 * 1024 * 1024 // 50MB (52,428,800 bytes)
+    if (selectedFile.size >= MAX_SIZE) {
       const sizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2)
-      setError(`文件过大 (${sizeMB}MB)。最大支持 50MB`)
+      setError(`文件过大 (${sizeMB}MB)。最大支持 50MB (约 52,428,800 字节)`)
+      setFile(null)
+      setCoverPreview(null)
       return false
     }
 

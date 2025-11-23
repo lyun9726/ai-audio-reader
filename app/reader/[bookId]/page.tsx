@@ -54,6 +54,18 @@ const InterlineTranslationReader = dynamic(
   }
 )
 
+const SentenceByStepReader = dynamic(
+  () => import('@/lib/components/SentenceByStepReader').then(mod => ({ default: mod.default })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+      </div>
+    )
+  }
+)
+
 const EpubRenderer = dynamic(
   () => import('@/lib/components/EpubRenderer').then(mod => {
     console.log('[Reader] EpubRenderer module loaded:', mod)
@@ -101,6 +113,7 @@ export default function ReaderPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('translated')
   const [useNativeViewer, setUseNativeViewer] = useState(true) // Toggle between native and paragraph view
   const [useDualLanguageView, setUseDualLanguageView] = useState(true) // Use dual-language PDF viewer
+  const [useSentenceMode, setUseSentenceMode] = useState(true) // 逐句对照模式
 
   // Caches
   const [translationCache, setTranslationCache] = useState<Map<number, string>>(new Map())
@@ -372,9 +385,24 @@ export default function ReaderPage() {
 
   // Render native PDF/EPUB viewer or fallback to paragraph view
   const renderContent = () => {
-    console.log('[Reader] renderContent called, book format:', book.format, 'file_url:', book.file_url, 'useNativeViewer:', useNativeViewer)
+    console.log('[Reader] renderContent called, book format:', book.format, 'file_url:', book.file_url, 'useNativeViewer:', useNativeViewer, 'useSentenceMode:', useSentenceMode)
 
-    // 优先使用译文穿插阅读器(所有格式都适用)
+    // 优先使用逐句对照阅读器
+    if (useSentenceMode && (!useNativeViewer || book.format === 'txt' || !book.file_url)) {
+      console.log('[Reader] Rendering Sentence-by-Step Reader')
+      return (
+        <SentenceByStepReader
+          bookId={bookId}
+          paragraphs={paragraphs}
+          sourceLang={book.original_lang || 'en'}
+          targetLang={book.target_lang || 'zh'}
+          currentParaIdx={currentParaIdx}
+          onParagraphChange={setCurrentParaIdx}
+        />
+      )
+    }
+
+    // 传统译文穿插阅读器(整段翻译)
     if (!useNativeViewer || book.format === 'txt' || !book.file_url) {
       console.log('[Reader] Rendering Interline Translation Reader')
       return (
@@ -481,6 +509,24 @@ export default function ReaderPage() {
             </div>
 
             <div className="flex items-center space-x-2">
+              {/* Toggle sentence mode - 逐句对照 */}
+              {!useNativeViewer && paragraphs.length > 0 && (
+                <button
+                  onClick={() => setUseSentenceMode(!useSentenceMode)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                    useSentenceMode
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : 'bg-slate-800 hover:bg-slate-700'
+                  }`}
+                  title={useSentenceMode ? '当前：逐句对照' : '切换到逐句对照'}
+                >
+                  <Languages className="w-4 h-4 text-white" />
+                  <span className="text-sm text-white">
+                    {useSentenceMode ? '✓ 逐句对照' : '整段翻译'}
+                  </span>
+                </button>
+              )}
+
               {/* Toggle between native and paragraph view for PDF/EPUB */}
               {['pdf', 'epub'].includes(book.format || '') && paragraphs.length > 0 && (
                 <button
