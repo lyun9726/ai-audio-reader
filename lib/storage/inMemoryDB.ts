@@ -30,3 +30,16 @@ class InMemoryDB {
 }
 
 export const inMemoryDB = new InMemoryDB()
+
+// Export convenience functions
+export function saveBook(book: Book): void {
+  inMemoryDB.saveBook(book)
+}
+
+export function getBook(bookId: string): Book | undefined {
+  return inMemoryDB.getBook(bookId)
+}
+
+export function getBlocks(bookId: string): ReaderBlock[] {
+  return inMemoryDB.getBlocks(bookId)
+}
