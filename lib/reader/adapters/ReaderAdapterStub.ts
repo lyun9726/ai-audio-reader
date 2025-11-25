@@ -4,28 +4,23 @@ export class ReaderAdapterStub {
   static parse(source: string): ParseResult {
     const demoBlocks: ReaderBlock[] = [
       {
-        id: 'demo-1',
-        order: 1,
+        type: 'paragraph',
         text: 'This is a demo article paragraph 1. Bitcoin is a decentralized digital currency.',
       },
       {
-        id: 'demo-2',
-        order: 2,
+        type: 'paragraph',
         text: 'It operates without a central bank or single administrator.',
       },
       {
-        id: 'demo-3',
-        order: 3,
+        type: 'paragraph',
         text: 'The network is peer-to-peer and transactions take place between users directly.',
       },
       {
-        id: 'demo-4',
-        order: 4,
+        type: 'paragraph',
         text: 'These transactions are verified by network nodes through cryptography.',
       },
       {
-        id: 'demo-5',
-        order: 5,
+        type: 'paragraph',
         text: 'Bitcoin was invented in 2008 by an unknown person or group using the name Satoshi Nakamoto.',
       },
     ]
@@ -34,8 +29,8 @@ export class ReaderAdapterStub {
       blocks: demoBlocks,
       metadata: {
         title: 'Demo Article: Understanding Bitcoin',
-        author: 'Demo Author',
-        language: 'en',
+        byline: 'Demo Author',
+        sourceUrl: source,
       },
     }
   }

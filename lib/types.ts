@@ -1,7 +1,9 @@
 export type ReaderBlock = {
-  id: string
-  order: number
-  text: string
+  id?: string
+  order?: number
+  type: 'paragraph' | 'image'
+  text?: string
+  url?: string
   meta?: any
 }
 
@@ -9,8 +11,11 @@ export type ParseResult = {
   blocks: ReaderBlock[]
   metadata?: {
     title?: string
-    author?: string
-    language?: string
+    byline?: string
+    length?: number
+    excerpt?: string
+    siteName?: string
+    sourceUrl?: string
     error?: string
   }
 }
