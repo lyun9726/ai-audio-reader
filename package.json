@@ -20,7 +20,8 @@
     "pdf-parse": "^2.4.5",
     "pdfjs-dist": "^5.4.394",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

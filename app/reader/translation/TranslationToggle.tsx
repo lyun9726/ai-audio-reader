@@ -1,14 +1,14 @@
-﻿'use client'
+'use client'
 
-interface TranslationToggleProps {
-  enabled: boolean
-  onChange: (enabled: boolean) => void
-}
+import { useReaderStore } from '../stores/readerStore'
 
-export function TranslationToggle({ enabled, onChange }: TranslationToggleProps) {
+export function TranslationToggle() {
+  const enabled = useReaderStore(state => state.translation.enabled)
+  const setTranslationEnabled = useReaderStore(state => state.setTranslationEnabled)
+
   return (
     <button
-      onClick={() => onChange(!enabled)}
+      onClick={() => setTranslationEnabled(!enabled)}
       className={'relative inline-flex h-6 w-11 items-center rounded-full transition-colors ' +
         (enabled ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600')}
     >

@@ -1,9 +1,10 @@
-﻿'use client'
+'use client'
 
-import { useState } from 'react'
+import { useReaderStore } from '../stores/readerStore'
 
 export function PitchControl() {
-  const [pitch, setPitch] = useState(1.0)
+  const pitch = useReaderStore(state => state.tts.pitch)
+  const setPitch = useReaderStore(state => state.setPitch)
 
   return (
     <div className="space-y-2">
