@@ -12,6 +12,32 @@ interface Block {
   text: string
 }
 
+// SSRF protection
+function isBlockedUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    const hostname = parsed.hostname.toLowerCase()
+
+    // Block localhost
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+      return true
+    }
+
+    // Block private IP ranges
+    const privateRanges = [
+      /^10\./,
+      /^192\.168\./,
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+      /^127\./,
+      /^169\.254\./,
+    ]
+
+    return privateRanges.some((pattern) => pattern.test(hostname))
+  } catch {
+    return true
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body: IngestUrlRequest = await req.json()
@@ -26,11 +52,20 @@ export async function POST(req: NextRequest) {
       return handleDemoFile(previewOnly, previewTranslated)
     }
 
-    // Fetch URL content
+    // SSRF protection
+    if (isBlockedUrl(url)) {
+      return NextResponse.json(
+        { error: 'Access to private or local URLs is not allowed' },
+        { status: 403 }
+      )
+    }
+
+    // Fetch URL content with timeout
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; AIAudioReader/1.0)',
       },
+      signal: AbortSignal.timeout(10000),
     })
 
     if (!response.ok) {

@@ -20,10 +20,14 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.OPENAI_API_KEY
 
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      )
+      // Demo mode: return base64 audio data URL
+      const { TTSProvider } = await import('@/lib/tts/provider')
+      const result = await TTSProvider.synthesize({ text, voiceId, rate, pitch })
+
+      return NextResponse.json({
+        audioUrl: result.audioUrl,
+        metadata: result.metadata,
+      })
     }
 
     // Call OpenAI TTS API

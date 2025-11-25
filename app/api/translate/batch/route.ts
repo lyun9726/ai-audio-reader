@@ -58,35 +58,73 @@ async function processBatch(
   batch: TranslateItem[],
   targetLanguage: string
 ): Promise<TranslateResult[]> {
+  const { simpleCache } = await import('@/lib/cache/simpleCache')
+
+  // Check cache first
+  const results: TranslateResult[] = []
+  const uncachedItems: TranslateItem[] = []
+
+  for (const item of batch) {
+    const cacheKey = `${targetLanguage}:${item.text}`
+    if (simpleCache.has(cacheKey)) {
+      results.push({
+        id: item.id,
+        original: item.text,
+        translation: simpleCache.get(cacheKey)!,
+      })
+    } else {
+      uncachedItems.push(item)
+    }
+  }
+
+  if (uncachedItems.length === 0) {
+    return results
+  }
+
   // Check if translation engine exists
   const apiKey = process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY
 
   if (!apiKey) {
     // Return mock translations if no API key
-    return batch.map(item => ({
-      id: item.id,
-      original: item.text,
-      translation: `[Mock ${targetLanguage}] ${item.text}`,
-    }))
+    const mockResults = uncachedItems.map(item => {
+      const translation = `${item.text} (ZH DEMO)`
+      simpleCache.set(`${targetLanguage}:${item.text}`, translation)
+      return {
+        id: item.id,
+        original: item.text,
+        translation,
+      }
+    })
+    return [...results, ...mockResults]
   }
 
   // Use existing translation logic from translateBatch.ts if available
   try {
     // Import from existing core module
     const { translateBatch } = await import('@/core/translate/translateBatch')
-    const translatedItems = await translateBatch(batch, {
+    const translatedItems = await translateBatch(uncachedItems, {
       targetLang: targetLanguage,
-      batchSize: batch.length,
+      batchSize: uncachedItems.length,
     })
 
-    return translatedItems.map((item: any) => ({
-      id: item.id,
-      original: item.original,
-      translation: item.translation || item.original,
-    }))
+    const newResults = translatedItems.map((item: any) => {
+      const translation = item.translation || item.original
+      simpleCache.set(`${targetLanguage}:${item.text}`, translation)
+      return {
+        id: item.id,
+        original: item.original,
+        translation,
+      }
+    })
+
+    return [...results, ...newResults]
   } catch (importError) {
     // Fallback: use simple LLM call
-    return await callLLMTranslation(batch, targetLanguage)
+    const llmResults = await callLLMTranslation(uncachedItems, targetLanguage)
+    for (const result of llmResults) {
+      simpleCache.set(`${targetLanguage}:${result.original}`, result.translation)
+    }
+    return [...results, ...llmResults]
   }
 }
 
