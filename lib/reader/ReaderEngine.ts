@@ -2,6 +2,7 @@ import { JSDOM } from 'jsdom'
 import { Readability } from '@mozilla/readability'
 import type { ParseResult, ReaderBlock } from '../types'
 import { ReaderAdapterStub } from './adapters/ReaderAdapterStub'
+import { cleanBlocks, getAutoFormatSetting } from './cleanBlocks'
 
 export class ReaderEngine {
   /**
@@ -10,7 +11,14 @@ export class ReaderEngine {
   static async parseFromUrl(url: string): Promise<ParseResult> {
     // Demo path handling
     if (url.includes('/mnt/data/') || url.includes('5321c35c-86d2-43e9-b68d-8963068f3405')) {
-      return ReaderAdapterStub.parse(url)
+      const result = ReaderAdapterStub.parse(url)
+
+      // Apply auto-formatting if enabled
+      if (getAutoFormatSetting()) {
+        result.blocks = cleanBlocks(result.blocks)
+      }
+
+      return result
     }
 
     try {
@@ -48,7 +56,12 @@ export class ReaderEngine {
       }
 
       // 4) Convert extracted HTML into paragraph blocks
-      const blocks: ReaderBlock[] = ReaderEngine.convertToBlocks(article.content)
+      let blocks: ReaderBlock[] = ReaderEngine.convertToBlocks(article.content)
+
+      // 5) Apply auto-formatting if enabled
+      if (getAutoFormatSetting()) {
+        blocks = cleanBlocks(blocks)
+      }
 
       return {
         blocks,
