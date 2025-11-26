@@ -1,0 +1,1009 @@
+[00:00:00.773] Server  LOG     
+[00:00:00.774] Server  LOG        We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+[00:00:00.774] Server  LOG        The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+[00:00:00.774] Server  LOG        	- include was updated to add '.next/dev/types/**/*.ts'
+[00:00:00.774] Server  LOG     
+[00:00:00.774] Server  LOG        The following mandatory changes were made to your tsconfig.json:
+
+[00:00:00.775] Server  LOG        	- jsx was set to react-jsx (next.js uses the React automatic runtime)
+[00:00:00.775] Server  LOG     
+[00:00:00.917] Server  LOG      ✓ Ready in 662ms
+[00:00:09.705] Server  ERROR    ⨯ ./UI/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: D:\Users\Administrator\Desktop\ai-audio-reader\UI\app\globals.css:1:1: Can't resolve 'tw-animate-css' in 'D:\Users\Administrator\Desktop\ai-audio-reader\UI\app'
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (D:\Users\Administrator\Desktop\ai-audio-reader\node_modules\@tailwindcss\postcss\dist\index.js:10:6912)]
+    [at process.processTicksAndRejections (node:internal/process/task_queues:105:5)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./UI/app/globals.css [Client Component Browser]
+    ./UI/app/layout.tsx [Server Component]
+
+
+
+./UI/components/ui/dialog.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-dialog'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as DialogPrimitive from '@radix-ui/react-dialog'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import { XIcon } from 'lucide-react'
+  6 |
+  7 | import { cn } from '@/lib/utils'
+
+
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/dialog.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/dialog.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./UI/components/ui/popover.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-popover'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as PopoverPrimitive from '@radix-ui/react-popover'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/popover.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/popover.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./UI/components/ui/scroll-area.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-scroll-area'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/scroll-area.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/scroll-area.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./UI/components/ui/select.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-select'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as SelectPrimitive from '@radix-ui/react-select'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
+  6 |
+  7 | import { cn } from '@/lib/utils'
+
+
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/select.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/select.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./UI/components/ui/slider.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-slider'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as SliderPrimitive from '@radix-ui/react-slider'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/slider.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/slider.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./UI/components/ui/button.tsx:2:1
+Module not found: Can't resolve '@radix-ui/react-slot'
+  1 | import * as React from 'react'
+> 2 | import { Slot } from '@radix-ui/react-slot'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | import { cva, type VariantProps } from 'class-variance-authority'
+  4 |
+  5 | import { cn } from '@/lib/utils'
+
+
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./UI/components/ui/tabs.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-tabs'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as TabsPrimitive from '@radix-ui/react-tabs'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/tabs.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/tabs.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./UI/app/layout.tsx:4:1
+Module not found: Can't resolve '@vercel/analytics/next'
+  2 | import type { Metadata } from "next"
+  3 | import { Geist, Geist_Mono } from "next/font/google"
+> 4 | import { Analytics } from "@vercel/analytics/next"
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import "./globals.css"
+  6 | import { GlobalHeader } from "@/components/global-header"
+  7 | import { GlobalFooter } from "@/components/global-footer"
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./UI/components/ui/button.tsx:3:1
+Module not found: Can't resolve 'class-variance-authority'
+  1 | import * as React from 'react'
+  2 | import { Slot } from '@radix-ui/react-slot'
+> 3 | import { cva, type VariantProps } from 'class-variance-authority'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | import { cn } from '@/lib/utils'
+  6 |
+
+
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./UI/lib/utils.ts:1:1
+Module not found: Can't resolve 'clsx'
+> 1 | import { clsx, type ClassValue } from 'clsx'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { twMerge } from 'tailwind-merge'
+  3 |
+  4 | export function cn(...inputs: ClassValue[]) {
+
+
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/dialog.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/dialog.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./UI/lib/utils.ts:2:1
+Module not found: Can't resolve 'tailwind-merge'
+  1 | import { clsx, type ClassValue } from 'clsx'
+> 2 | import { twMerge } from 'tailwind-merge'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export function cn(...inputs: ClassValue[]) {
+  5 |   return twMerge(clsx(inputs))
+
+
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/dialog.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/dialog.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:00:10.513] Browser ERROR   uncaughtError: Error: ./UI/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: D:\Users\Administrator\Desktop\ai-audio-reader\UI\app\globals.css:1:1: Can't resolve 'tw-animate-css' in 'D:\Users\Administrator\Desktop\ai-audio-reader\UI\app'
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (D:\Users\Administrator\Desktop\ai-audio-reader\node_modules\@tailwindcss\postcss\dist\index.js:10:6912)]
+    [at process.processTicksAndRejections (node:internal/process/task_queues:105:5)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./UI/app/globals.css [Client Component Browser]
+    ./UI/app/layout.tsx [Server Component]
+
+
+[00:00:10.706] Browser ERROR   ./UI/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: D:\Users\Administrator\Desktop\ai-audio-reader\UI\app\globals.css:1:1: Can't resolve 'tw-animate-css' in 'D:\Users\Administrator\Desktop\ai-audio-reader\UI\app'
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (D:\Users\Administrator\Desktop\ai-audio-reader\node_modules\@tailwindcss\postcss\dist\index.js:10:6912)]
+    [at process.processTicksAndRejections (node:internal/process/task_queues:105:5)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./UI/app/globals.css [Client Component Browser]
+    ./UI/app/layout.tsx [Server Component]
+[00:00:10.706] Browser ERROR   ./UI/components/ui/dialog.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-dialog'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as DialogPrimitive from '@radix-ui/react-dialog'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import { XIcon } from 'lucide-react'
+  6 |
+  7 | import { cn } from '@/lib/utils'
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/dialog.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/dialog.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:10.706] Browser ERROR   ./UI/components/ui/popover.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-popover'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as PopoverPrimitive from '@radix-ui/react-popover'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/popover.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/popover.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:10.706] Browser ERROR   ./UI/components/ui/scroll-area.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-scroll-area'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/scroll-area.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/scroll-area.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:10.706] Browser ERROR   ./UI/components/ui/select.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-select'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as SelectPrimitive from '@radix-ui/react-select'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
+  6 |
+  7 | import { cn } from '@/lib/utils'
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/select.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/select.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:10.706] Browser ERROR   ./UI/components/ui/slider.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-slider'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as SliderPrimitive from '@radix-ui/react-slider'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/slider.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/slider.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:10.706] Browser ERROR   ./UI/components/ui/button.tsx:2:1
+Module not found: Can't resolve '@radix-ui/react-slot'
+  1 | import * as React from 'react'
+> 2 | import { Slot } from '@radix-ui/react-slot'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | import { cva, type VariantProps } from 'class-variance-authority'
+  4 |
+  5 | import { cn } from '@/lib/utils'
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:10.706] Browser ERROR   ./UI/components/ui/tabs.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-tabs'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as TabsPrimitive from '@radix-ui/react-tabs'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/tabs.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/tabs.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:10.706] Browser ERROR   ./UI/app/layout.tsx:4:1
+Module not found: Can't resolve '@vercel/analytics/next'
+  2 | import type { Metadata } from "next"
+  3 | import { Geist, Geist_Mono } from "next/font/google"
+> 4 | import { Analytics } from "@vercel/analytics/next"
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import "./globals.css"
+  6 | import { GlobalHeader } from "@/components/global-header"
+  7 | import { GlobalFooter } from "@/components/global-footer"
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:10.706] Browser ERROR   ./UI/components/ui/button.tsx:3:1
+Module not found: Can't resolve 'class-variance-authority'
+  1 | import * as React from 'react'
+  2 | import { Slot } from '@radix-ui/react-slot'
+> 3 | import { cva, type VariantProps } from 'class-variance-authority'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | import { cn } from '@/lib/utils'
+  6 |
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:10.706] Browser ERROR   ./UI/lib/utils.ts:1:1
+Module not found: Can't resolve 'clsx'
+> 1 | import { clsx, type ClassValue } from 'clsx'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { twMerge } from 'tailwind-merge'
+  3 |
+  4 | export function cn(...inputs: ClassValue[]) {
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/dialog.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/dialog.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:10.706] Browser ERROR   ./UI/lib/utils.ts:2:1
+Module not found: Can't resolve 'tailwind-merge'
+  1 | import { clsx, type ClassValue } from 'clsx'
+> 2 | import { twMerge } from 'tailwind-merge'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export function cn(...inputs: ClassValue[]) {
+  5 |   return twMerge(clsx(inputs))
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/dialog.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/dialog.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:12.036] Browser ERROR   ./UI/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: D:\Users\Administrator\Desktop\ai-audio-reader\UI\app\globals.css:1:1: Can't resolve 'tw-animate-css' in 'D:\Users\Administrator\Desktop\ai-audio-reader\UI\app'
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (D:\Users\Administrator\Desktop\ai-audio-reader\node_modules\@tailwindcss\postcss\dist\index.js:10:6912)]
+    [at process.processTicksAndRejections (node:internal/process/task_queues:105:5)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./UI/app/globals.css [Client Component Browser]
+    ./UI/app/layout.tsx [Server Component]
+[00:00:12.036] Browser ERROR   ./UI/components/ui/dialog.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-dialog'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as DialogPrimitive from '@radix-ui/react-dialog'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import { XIcon } from 'lucide-react'
+  6 |
+  7 | import { cn } from '@/lib/utils'
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/dialog.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/dialog.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:12.036] Browser ERROR   ./UI/components/ui/popover.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-popover'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as PopoverPrimitive from '@radix-ui/react-popover'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/popover.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/popover.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:12.036] Browser ERROR   ./UI/components/ui/scroll-area.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-scroll-area'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/scroll-area.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/scroll-area.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:12.036] Browser ERROR   ./UI/components/ui/select.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-select'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as SelectPrimitive from '@radix-ui/react-select'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
+  6 |
+  7 | import { cn } from '@/lib/utils'
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/select.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/select.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:12.036] Browser ERROR   ./UI/components/ui/slider.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-slider'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as SliderPrimitive from '@radix-ui/react-slider'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/slider.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/slider.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedBottomControlBar.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:12.036] Browser ERROR   ./UI/components/ui/button.tsx:2:1
+Module not found: Can't resolve '@radix-ui/react-slot'
+  1 | import * as React from 'react'
+> 2 | import { Slot } from '@radix-ui/react-slot'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 | import { cva, type VariantProps } from 'class-variance-authority'
+  4 |
+  5 | import { cn } from '@/lib/utils'
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:12.036] Browser ERROR   ./UI/components/ui/tabs.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-tabs'
+  2 |
+  3 | import * as React from 'react'
+> 4 | import * as TabsPrimitive from '@radix-ui/react-tabs'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 |
+  6 | import { cn } from '@/lib/utils'
+  7 |
+
+Import traces:
+  Client Component Browser:
+    ./UI/components/ui/tabs.tsx [Client Component Browser]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./UI/components/ui/tabs.tsx [Client Component SSR]
+    ./UI/components/reader/EnhancedRightSidePanel.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:12.036] Browser ERROR   ./UI/app/layout.tsx:4:1
+Module not found: Can't resolve '@vercel/analytics/next'
+  2 | import type { Metadata } from "next"
+  3 | import { Geist, Geist_Mono } from "next/font/google"
+> 4 | import { Analytics } from "@vercel/analytics/next"
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import "./globals.css"
+  6 | import { GlobalHeader } from "@/components/global-header"
+  7 | import { GlobalFooter } from "@/components/global-footer"
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:12.036] Browser ERROR   ./UI/components/ui/button.tsx:3:1
+Module not found: Can't resolve 'class-variance-authority'
+  1 | import * as React from 'react'
+  2 | import { Slot } from '@radix-ui/react-slot'
+> 3 | import { cva, type VariantProps } from 'class-variance-authority'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 |
+  5 | import { cn } from '@/lib/utils'
+  6 |
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:12.036] Browser ERROR   ./UI/lib/utils.ts:1:1
+Module not found: Can't resolve 'clsx'
+> 1 | import { clsx, type ClassValue } from 'clsx'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 | import { twMerge } from 'tailwind-merge'
+  3 |
+  4 | export function cn(...inputs: ClassValue[]) {
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/dialog.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/dialog.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:12.036] Browser ERROR   ./UI/lib/utils.ts:2:1
+Module not found: Can't resolve 'tailwind-merge'
+  1 | import { clsx, type ClassValue } from 'clsx'
+> 2 | import { twMerge } from 'tailwind-merge'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  3 |
+  4 | export function cn(...inputs: ClassValue[]) {
+  5 |   return twMerge(clsx(inputs))
+
+Import traces:
+  #1 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/dialog.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Client Component Browser]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #2 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/dialog.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Client Component SSR]
+    ./UI/app/reader/page.tsx [Server Component]
+
+  #3 [Client Component Browser]:
+    ./UI/lib/utils.ts [Client Component Browser]
+    ./UI/components/ui/button.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Client Component Browser]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+  #4 [Client Component SSR]:
+    ./UI/lib/utils.ts [Client Component SSR]
+    ./UI/components/ui/button.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Client Component SSR]
+    ./UI/components/global-header.tsx [Server Component]
+    ./UI/app/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
