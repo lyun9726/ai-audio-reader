@@ -96,7 +96,7 @@ const initialState: ReaderState = {
   isLoading: false,
   isTranslating: false,
   isSpeaking: false,
-  layoutMode: 'single',
+  layoutMode: 'split',
 }
 
 export function useReaderState(): UseReaderStateReturn {
