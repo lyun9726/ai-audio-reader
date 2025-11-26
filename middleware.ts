@@ -37,9 +37,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (!user && request.nextUrl.pathname.startsWith('/reader')) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+  // Allow public access to /reader
+  // if (!user && request.nextUrl.pathname.startsWith('/reader')) {
+  //   return NextResponse.redirect(new URL('/login', request.url))
+  // }
 
   if (user && request.nextUrl.pathname === '/login') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
