@@ -3,10 +3,11 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { UploadCloud, LinkIcon, AlertCircle } from "lucide-react"
+import { UploadCloud, LinkIcon, AlertCircle, Loader2, CheckCircle2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -15,11 +16,17 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { booksAPI, parseAPI } from "@/lib/api-client"
 
 export default function UploadPage() {
+  const router = useRouter()
   const [isDragOver, setIsDragOver] = useState(false)
   const [showErrorModal, setShowErrorModal] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
   const [urlInput, setUrlInput] = useState("")
+  const [uploading, setUploading] = useState(false)
+  const [processingUrl, setProcessingUrl] = useState(false)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -39,21 +46,67 @@ export default function UploadPage() {
     }
   }
 
-  const handleFileSelect = (file: File) => {
-    // Stub: Check if supported
+  const handleFileSelect = async (file: File) => {
+    // Check if supported
     const supportedTypes = ["application/pdf", "application/epub+zip", "text/plain"]
     if (!supportedTypes.includes(file.type)) {
+      setErrorMessage("We currently support PDF, EPUB, and TXT files. Please try a different format.")
       setShowErrorModal(true)
-    } else {
-      console.log("Uploading file:", file.name)
-      // Initiate upload logic here
+      return
+    }
+
+    try {
+      setUploading(true)
+      setUploadSuccess(false)
+
+      // Upload the file
+      const result = await booksAPI.upload(file)
+
+      setUploadSuccess(true)
+
+      // Redirect to reader after a brief delay
+      setTimeout(() => {
+        router.push(`/reader/${result.bookId}`)
+      }, 1500)
+    } catch (error) {
+      console.error("Upload failed:", error)
+      setErrorMessage(error instanceof Error ? error.message : "Upload failed. Please try again.")
+      setShowErrorModal(true)
+    } finally {
+      setUploading(false)
     }
   }
 
-  const handleUrlSubmit = (e: React.FormEvent) => {
+  const handleUrlSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Processing URL:", urlInput)
-    // Initiate URL ingest
+
+    if (!urlInput.trim()) {
+      setErrorMessage("Please enter a valid URL")
+      setShowErrorModal(true)
+      return
+    }
+
+    try {
+      setProcessingUrl(true)
+      setUploadSuccess(false)
+
+      // Parse the URL and get content
+      const result = await parseAPI.fromUrl(urlInput)
+
+      setUploadSuccess(true)
+
+      // Redirect to reader with parsed content
+      // Note: This assumes the parseAPI returns a bookId or we need to create one
+      setTimeout(() => {
+        router.push(`/web-reader?url=${encodeURIComponent(urlInput)}`)
+      }, 1500)
+    } catch (error) {
+      console.error("URL processing failed:", error)
+      setErrorMessage(error instanceof Error ? error.message : "Failed to process URL. Please try again.")
+      setShowErrorModal(true)
+    } finally {
+      setProcessingUrl(false)
+    }
   }
 
   return (
@@ -63,11 +116,17 @@ export default function UploadPage() {
       <div className="grid gap-8">
         {/* Drag & Drop Area */}
         <div
-          className={`border-3 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer ${isDragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"}`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={() => document.getElementById("file-upload")?.click()}
+          className={`border-3 border-dashed rounded-xl p-12 text-center transition-colors ${
+            uploading || uploadSuccess
+              ? "border-muted-foreground/25 cursor-not-allowed"
+              : isDragOver
+                ? "border-primary bg-primary/5 cursor-pointer"
+                : "border-muted-foreground/25 hover:border-primary/50 cursor-pointer"
+          }`}
+          onDragOver={uploading || uploadSuccess ? undefined : handleDragOver}
+          onDragLeave={uploading || uploadSuccess ? undefined : handleDragLeave}
+          onDrop={uploading || uploadSuccess ? undefined : handleDrop}
+          onClick={uploading || uploadSuccess ? undefined : () => document.getElementById("file-upload")?.click()}
         >
           <input
             id="file-upload"
@@ -75,13 +134,28 @@ export default function UploadPage() {
             className="hidden"
             accept=".pdf,.epub,.txt"
             onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+            disabled={uploading || uploadSuccess}
           />
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-            <UploadCloud className="h-8 w-8 text-muted-foreground" />
+            {uploading ? (
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+            ) : uploadSuccess ? (
+              <CheckCircle2 className="h-8 w-8 text-green-500" />
+            ) : (
+              <UploadCloud className="h-8 w-8 text-muted-foreground" />
+            )}
           </div>
-          <h3 className="text-xl font-semibold mb-2">Click to upload or drag and drop</h3>
-          <p className="text-muted-foreground mb-6">PDF, EPUB, or TXT (Max 50MB)</p>
-          <Button>Select File</Button>
+          <h3 className="text-xl font-semibold mb-2">
+            {uploading ? "Uploading..." : uploadSuccess ? "Upload Successful!" : "Click to upload or drag and drop"}
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            {uploading
+              ? "Please wait while we process your file"
+              : uploadSuccess
+                ? "Redirecting to reader..."
+                : "PDF, EPUB, or TXT (Max 50MB)"}
+          </p>
+          {!uploading && !uploadSuccess && <Button>Select File</Button>}
         </div>
 
         <div className="relative">
@@ -112,7 +186,16 @@ export default function UploadPage() {
                   />
                 </div>
               </div>
-              <Button type="submit">Import</Button>
+              <Button type="submit" disabled={processingUrl || uploadSuccess}>
+                {processingUrl ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Import"
+                )}
+              </Button>
             </form>
           </CardContent>
         </Card>
@@ -140,8 +223,7 @@ export default function UploadPage() {
               <AlertCircle className="h-5 w-5" /> Format Not Supported
             </DialogTitle>
             <DialogDescription>
-              We currently support PDF, EPUB, and TXT files. Please try converting your file or uploading a different
-              format.
+              {errorMessage || "We currently support PDF, EPUB, and TXT files. Please try converting your file or uploading a different format."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -1,9 +1,30 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, BookOpen, Clock, Star, Upload, Mic, Layout, Sparkles } from 'lucide-react'
-import { mockBooks } from "@/data/languages"
+import { ArrowRight, BookOpen, Clock, Star, Upload, Mic, Layout, Sparkles, Loader2 } from 'lucide-react'
+import { booksAPI, type Book } from "@/lib/api-client"
 
 export default function Dashboard() {
+  const [books, setBooks] = useState<Book[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadBooks() {
+      try {
+        const data = await booksAPI.list()
+        setBooks(data.slice(0, 3)) // Only show first 3 books
+      } catch (err) {
+        console.error("Failed to load books:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadBooks()
+  }, [])
+
   return (
     <div className="min-h-screen bg-secondary/30 pb-20">
       {/* Hero Section */}
@@ -54,8 +75,23 @@ export default function Dashboard() {
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockBooks.slice(0, 3).map((book) => (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : books.length === 0 ? (
+            <div className="text-center py-12 bg-card rounded-2xl border border-border/50">
+              <BookOpen className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+              <p className="text-muted-foreground mb-4">No books in your library yet.</p>
+              <Link href="/upload">
+                <Button>
+                  <Upload className="mr-2 h-4 w-4" /> Upload Your First Book
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {books.map((book) => (
               <Link key={book.id} href={`/reader/${book.id}`} className="group block">
                 <div className="bg-card rounded-2xl overflow-hidden border border-border/50 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col">
                   <div className="aspect-[2/1] relative bg-muted flex items-center justify-center overflow-hidden">
@@ -75,27 +111,37 @@ export default function Dashboard() {
                   <div className="p-5 flex flex-col flex-1">
                     <div className="flex justify-between items-start mb-2">
                       <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-muted-foreground ring-1 ring-inset ring-gray-500/10">
-                        EPUB
+                        {book.format?.toUpperCase() || 'UNKNOWN'}
                       </span>
-                      <span className="text-xs text-muted-foreground">2 hrs left</span>
+                      {book.created_at && (
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(book.created_at).toLocaleDateString()}
+                        </span>
+                      )}
                     </div>
                     <h3 className="font-semibold text-lg text-foreground mb-1 line-clamp-1">{book.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">{book.author}</p>
-                    
-                    <div className="mt-auto pt-4">
-                      <div className="flex justify-between text-xs mb-2">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">45%</span>
+                    <p className="text-sm text-muted-foreground mb-4">{book.author || 'Unknown Author'}</p>
+
+                    {book.progress !== undefined && (
+                      <div className="mt-auto pt-4">
+                        <div className="flex justify-between text-xs mb-2">
+                          <span className="text-muted-foreground">Progress</span>
+                          <span className="font-medium">{Math.round(book.progress * 100)}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+                            style={{ width: `${book.progress * 100}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full w-[45%] transition-all duration-500 ease-out" />
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Features Grid */}
