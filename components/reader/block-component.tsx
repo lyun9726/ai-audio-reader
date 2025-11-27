@@ -2,70 +2,126 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Play, FileEdit, Languages, Highlighter } from "lucide-react"
+import { Play, FileEdit, Highlighter } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface BlockProps {
   id: string
   originalText: string
   translation?: string
   isActive?: boolean
+  highlightColor?: "yellow" | "green" | "blue" | "pink"
+  note?: string
   onPlay?: (id: string) => void
-  onTranslate?: (id: string) => void
+  onHighlight?: (id: string, color: "yellow" | "green" | "blue" | "pink") => void
+  onNote?: (id: string) => void
 }
 
-export function BlockComponent({ id, originalText, translation, isActive, onPlay, onTranslate }: BlockProps) {
+export function BlockComponent({
+  id,
+  originalText,
+  translation,
+  isActive,
+  highlightColor,
+  note,
+  onPlay,
+  onHighlight,
+  onNote,
+}: BlockProps) {
   const [isHovered, setIsHovered] = useState(false)
 
   return (
     <div
       className={cn(
-        "group relative p-4 rounded-lg transition-colors mb-4 border border-transparent",
-        isActive ? "bg-primary/10 border-primary/20" : "hover:bg-muted/30",
+        "group relative px-6 py-5 rounded-2xl transition-all duration-200 mb-6",
+        highlightColor && `highlight-${highlightColor}`,
+        isActive ? "bg-primary/5 ring-2 ring-primary/20 shadow-sm" : "hover:bg-muted/40",
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Action Overlay */}
+      {/* Action Toolbar - appears on hover */}
       <div
         className={cn(
-          "absolute -top-3 right-4 flex gap-1 bg-background shadow-sm border rounded-full p-1 transition-opacity",
-          isHovered || isActive ? "opacity-100" : "opacity-0",
+          "absolute -top-3 right-6 flex gap-1 bg-background/95 backdrop-blur-sm shadow-lg border border-border/50 rounded-xl p-1.5 transition-all duration-200",
+          isHovered || isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none",
         )}
       >
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 rounded-full"
+          className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary"
           onClick={() => onPlay?.(id)}
           title="Play Block"
         >
-          <Play className="h-3 w-3" />
+          <Play className="h-4 w-4" />
         </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary"
+              title="Highlight"
+            >
+              <Highlighter className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuItem onClick={() => onHighlight?.(id, "yellow")} className="gap-2">
+              <div className="h-4 w-4 rounded bg-[var(--highlight-yellow)] border" />
+              Yellow
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onHighlight?.(id, "green")} className="gap-2">
+              <div className="h-4 w-4 rounded bg-[var(--highlight-green)] border" />
+              Green
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onHighlight?.(id, "blue")} className="gap-2">
+              <div className="h-4 w-4 rounded bg-[var(--highlight-blue)] border" />
+              Blue
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onHighlight?.(id, "pink")} className="gap-2">
+              <div className="h-4 w-4 rounded bg-[var(--highlight-pink)] border" />
+              Pink
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 rounded-full"
-          onClick={() => onTranslate?.(id)}
-          title="Translate"
+          className={cn(
+            "h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary",
+            note && "text-primary bg-primary/5",
+          )}
+          onClick={() => onNote?.(id)}
+          title="Add Note"
         >
-          <Languages className="h-3 w-3" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" title="Highlight">
-          <Highlighter className="h-3 w-3" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" title="Add Note">
-          <FileEdit className="h-3 w-3" />
+          <FileEdit className="h-4 w-4" />
         </Button>
       </div>
 
-      {/* Content */}
-      <div className="space-y-3">
-        <p className="text-lg leading-relaxed text-foreground font-serif">{originalText}</p>
+      {/* Content with refined typography */}
+      <div className="space-y-4">
+        <p
+          className="text-lg leading-relaxed text-foreground tracking-[-0.01em]"
+          style={{ fontFamily: "var(--font-sans)" }}
+        >
+          {originalText}
+        </p>
+
         {translation && (
-          <p className="text-base leading-relaxed text-muted-foreground font-sans border-l-2 border-primary/30 pl-3">
-            {translation}
-          </p>
+          <div className="pt-3 border-t border-border/30">
+            <p className="text-base leading-relaxed text-muted-foreground tracking-[-0.005em]">{translation}</p>
+          </div>
+        )}
+
+        {note && (
+          <div className="mt-3 p-3 bg-secondary/50 rounded-lg border border-border/40">
+            <p className="text-sm text-foreground/90 italic">{note}</p>
+          </div>
         )}
       </div>
     </div>
