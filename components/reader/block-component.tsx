@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Play, FileEdit, Highlighter } from "lucide-react"
+import { Play, FileEdit, Highlighter, Languages } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
@@ -14,6 +14,7 @@ interface BlockProps {
   highlightColor?: "yellow" | "green" | "blue" | "pink"
   note?: string
   onPlay?: (id: string) => void
+  onTranslate?: (id: string) => void
   onHighlight?: (id: string, color: "yellow" | "green" | "blue" | "pink") => void
   onNote?: (id: string) => void
 }
@@ -26,6 +27,7 @@ export function BlockComponent({
   highlightColor,
   note,
   onPlay,
+  onTranslate,
   onHighlight,
   onNote,
 }: BlockProps) {
@@ -56,6 +58,19 @@ export function BlockComponent({
           title="Play Block"
         >
           <Play className="h-4 w-4" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary",
+            translation && "text-primary bg-primary/5"
+          )}
+          onClick={() => onTranslate?.(id)}
+          title="Translate"
+        >
+          <Languages className="h-4 w-4" />
         </Button>
 
         <DropdownMenu>

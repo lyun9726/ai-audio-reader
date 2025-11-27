@@ -10,6 +10,42 @@ import { Button } from "@/components/ui/button"
 import { ChevronRight, ChevronLeft, Loader2, AlertCircle } from "lucide-react"
 import { booksAPI, parseAPI, type Book, type ReaderBlock } from "@/lib/api-client"
 
+// Helper function to get mock blocks for fallback
+function getMockBlocks(): ReaderBlock[] {
+  return [
+    {
+      id: "1",
+      text: "In my younger and more vulnerable years my father gave me some advice that I've been turning over in my mind ever since.",
+      type: "paragraph",
+    },
+    {
+      id: "2",
+      text: '"Whenever you feel like criticizing any one," he told me, "just remember that all the people in this world haven\'t had the advantages that you\'ve had."',
+      type: "paragraph",
+    },
+    {
+      id: "3",
+      text: "He didn't say any more, but we've always been unusually communicative in a reserved way, and I understood that he meant a great deal more than that.",
+      type: "paragraph",
+    },
+    {
+      id: "4",
+      text: "In consequence, I'm inclined to reserve all judgments, a habit that has opened up many curious natures to me and also made me the victim of not a few veteran bores.",
+      type: "paragraph",
+    },
+    {
+      id: "5",
+      text: "The abnormal mind is quick to detect and attach itself to this quality when it appears in a normal person, and so it came about that in college I was unjustly accused of being a politician, because I was privy to the secret griefs of wild, unknown men.",
+      type: "paragraph",
+    },
+    {
+      id: "6",
+      text: "Most of the confidences were unsought—frequently I have feigned sleep, preoccupation, or a hostile levity when I realized by some unmistakable sign that an intimate revelation was quivering on the horizon.",
+      type: "paragraph",
+    },
+  ]
+}
+
 export default function ReaderPage() {
   const params = useParams()
   const bookId = params.bookId as string
@@ -20,6 +56,9 @@ export default function ReaderPage() {
   const [book, setBook] = useState<Book | null>(null)
   const [blocks, setBlocks] = useState<ReaderBlock[]>([])
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null)
+  const [translations, setTranslations] = useState<Map<string, string>>(new Map())
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     async function loadBook() {
@@ -27,10 +66,25 @@ export default function ReaderPage() {
         setLoading(true)
         setError(null)
 
-        // Try to get book metadata from backend
+        // Try to get book metadata and paragraphs from backend
         try {
           const bookData = await booksAPI.get(bookId)
           setBook(bookData)
+
+          // Try to load paragraphs
+          try {
+            const paragraphs = await booksAPI.getParagraphs(bookId)
+            if (paragraphs && paragraphs.length > 0) {
+              setBlocks(paragraphs)
+            } else {
+              // Use sample data if no paragraphs found
+              console.log("No paragraphs found, using sample data")
+              setBlocks(getMockBlocks())
+            }
+          } catch (paraError) {
+            console.log("Failed to load paragraphs, using sample data:", paraError)
+            setBlocks(getMockBlocks())
+          }
         } catch (apiError) {
           // If API fails (e.g., not logged in), use mock book data
           console.log("Using mock book data:", apiError)
@@ -42,42 +96,8 @@ export default function ReaderPage() {
             created_at: new Date().toISOString(),
           }
           setBook(mockBook)
+          setBlocks(getMockBlocks())
         }
-
-        // Generate content blocks (mock data for now)
-        const mockBlocks: ReaderBlock[] = [
-          {
-            id: "1",
-            text: "In my younger and more vulnerable years my father gave me some advice that I've been turning over in my mind ever since.",
-            type: "paragraph",
-          },
-          {
-            id: "2",
-            text: '"Whenever you feel like criticizing any one," he told me, "just remember that all the people in this world haven\'t had the advantages that you\'ve had."',
-            type: "paragraph",
-          },
-          {
-            id: "3",
-            text: "He didn't say any more, but we've always been unusually communicative in a reserved way, and I understood that he meant a great deal more than that.",
-            type: "paragraph",
-          },
-          {
-            id: "4",
-            text: "In consequence, I'm inclined to reserve all judgments, a habit that has opened up many curious natures to me and also made me the victim of not a few veteran bores.",
-            type: "paragraph",
-          },
-          {
-            id: "5",
-            text: "The abnormal mind is quick to detect and attach itself to this quality when it appears in a normal person, and so it came about that in college I was unjustly accused of being a politician, because I was privy to the secret griefs of wild, unknown men.",
-            type: "paragraph",
-          },
-          {
-            id: "6",
-            text: "Most of the confidences were unsought—frequently I have feigned sleep, preoccupation, or a hostile levity when I realized by some unmistakable sign that an intimate revelation was quivering on the horizon.",
-            type: "paragraph",
-          },
-        ]
-        setBlocks(mockBlocks)
       } catch (err) {
         console.error("Failed to load book:", err)
         setError(err instanceof Error ? err.message : "Failed to load book")
@@ -90,6 +110,70 @@ export default function ReaderPage() {
       loadBook()
     }
   }, [bookId])
+
+  // Handle translation
+  const handleTranslate = async (blockId: string) => {
+    const block = blocks.find(b => b.id === blockId)
+    if (!block) return
+
+    try {
+      const { translationAPI } = await import("@/lib/api-client")
+      const translated = await translationAPI.translate(block.text, 'zh')
+      setTranslations(prev => new Map(prev).set(blockId, translated))
+    } catch (err) {
+      console.error("Translation failed:", err)
+    }
+  }
+
+  // Handle play/TTS
+  const handlePlay = async (blockId: string) => {
+    const block = blocks.find(b => b.id === blockId)
+    if (!block) return
+
+    try {
+      // Stop current audio if playing
+      if (currentAudio) {
+        currentAudio.pause()
+        currentAudio.currentTime = 0
+      }
+
+      setActiveBlockId(blockId)
+      setIsPlaying(true)
+
+      const { ttsAPI } = await import("@/lib/api-client")
+      const result = await ttsAPI.synthesize(block.text)
+
+      const audio = new Audio(result.audioUrl)
+      setCurrentAudio(audio)
+
+      audio.onended = () => {
+        setIsPlaying(false)
+        setActiveBlockId(null)
+      }
+
+      audio.onerror = () => {
+        setIsPlaying(false)
+        setActiveBlockId(null)
+        console.error("Audio playback failed")
+      }
+
+      await audio.play()
+    } catch (err) {
+      console.error("TTS failed:", err)
+      setIsPlaying(false)
+      setActiveBlockId(null)
+    }
+  }
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (currentAudio) {
+        currentAudio.pause()
+        currentAudio.currentTime = 0
+      }
+    }
+  }, [currentAudio])
 
   if (loading) {
     return (
@@ -130,14 +214,10 @@ export default function ReaderPage() {
                     key={block.id}
                     id={block.id}
                     originalText={block.text}
+                    translation={translations.get(block.id)}
                     isActive={block.id === activeBlockId}
-                    onPlay={(id) => {
-                      setActiveBlockId(id)
-                      console.log("Play block:", id)
-                    }}
-                    onTranslate={(id) => {
-                      console.log("Translate block:", id)
-                    }}
+                    onPlay={handlePlay}
+                    onTranslate={handleTranslate}
                   />
                 ))}
               </div>

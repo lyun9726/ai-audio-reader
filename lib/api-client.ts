@@ -78,6 +78,24 @@ export const booksAPI = {
     })
     if (!res.ok) throw new Error('Failed to delete book')
   },
+
+  /**
+   * Get book paragraphs/blocks
+   */
+  async getParagraphs(bookId: string): Promise<ReaderBlock[]> {
+    const res = await fetch(`/api/books/${bookId}/paragraphs`)
+    if (!res.ok) throw new Error('Failed to fetch paragraphs')
+    const data = await res.json()
+
+    // Convert backend paragraph format to ReaderBlock format
+    return data.paragraphs.map((p: any) => ({
+      id: p.id || p.para_idx?.toString(),
+      text: p.content || p.text,
+      type: 'paragraph',
+      order: p.para_idx,
+      meta: p
+    }))
+  },
 }
 
 // Parse API
