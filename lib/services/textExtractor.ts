@@ -13,32 +13,62 @@ export interface Paragraph {
 }
 
 /**
- * Extract text from PDF buffer using pdf-parse (works in Node.js serverless)
+ * Extract text from PDF buffer using pdfjs-dist (works in Node.js)
  */
 export async function extractPdfText(buffer: Buffer): Promise<ExtractedContent> {
   try {
     console.log('[PDF Extract] Starting extraction, buffer size:', buffer.length, 'bytes')
 
-    // Use pdf-parse which is more reliable for server-side Node.js
-    const pdfParseModule = await import('pdf-parse')
-    const pdfParse = pdfParseModule.default || pdfParseModule
+    // Import pdfjs-dist for server-side PDF parsing
+    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
 
-    console.log('[PDF Extract] Parsing PDF document...')
-    const data = await pdfParse(buffer)
+    console.log('[PDF Extract] Loading PDF document...')
+    const loadingTask = pdfjsLib.getDocument({
+      data: new Uint8Array(buffer),
+      useSystemFonts: true,
+      isEvalSupported: false,
+    })
 
-    console.log('[PDF Extract] ✓ PDF parsed, pages:', data.numpages)
-    console.log('[PDF Extract] Total text length:', data.text.length, 'characters')
-    console.log('[PDF Extract] First 200 chars:', data.text.substring(0, 200))
+    const pdfDoc = await loadingTask.promise
+    const numPages = pdfDoc.numPages
+    console.log('[PDF Extract] ✓ PDF loaded, pages:', numPages)
 
-    if (!data.text || data.text.trim().length === 0) {
+    // Extract text from all pages
+    const textParts: string[] = []
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const page = await pdfDoc.getPage(pageNum)
+      const textContent = await page.getTextContent()
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ')
+
+      if (pageText.trim()) {
+        textParts.push(pageText)
+      }
+
+      // Log progress every 10 pages
+      if (pageNum % 10 === 0 || pageNum === numPages) {
+        console.log(`[PDF Extract] Processed ${pageNum}/${numPages} pages`)
+      }
+    }
+
+    const fullText = textParts.join('\n\n')
+    console.log('[PDF Extract] ✓ Extraction complete')
+    console.log('[PDF Extract] Total text length:', fullText.length, 'characters')
+
+    if (!fullText || fullText.trim().length === 0) {
       throw new Error('PDF contains no extractable text. It may be a scanned document (images only).')
     }
 
+    // Get metadata
+    const metadata = await pdfDoc.getMetadata()
+    const info = metadata.info as any
+
     return {
-      text: data.text,
-      title: data.info?.Title || undefined,
-      author: data.info?.Author || undefined,
-      totalPages: data.numpages,
+      text: fullText,
+      title: info?.Title || undefined,
+      author: info?.Author || undefined,
+      totalPages: numPages,
     }
   } catch (error: any) {
     console.error('[PDF Extract] Error:', error.message)
