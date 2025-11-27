@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '50mb',
     },
-    // This is the key setting for API routes body size
-    middlewareClientMaxBodySize: '50mb',
+    // Use proxyClientMaxBodySize instead of deprecated middlewareClientMaxBodySize
+    proxyClientMaxBodySize: '50mb',
   },
 };
 
