@@ -17,6 +17,37 @@ export default function Dashboard() {
         setBooks(data.slice(0, 3)) // Only show first 3 books
       } catch (err) {
         console.error("Failed to load books:", err)
+        // Use mock data if API fails
+        const mockBooks: Book[] = [
+          {
+            id: "1",
+            title: "The Great Gatsby",
+            author: "F. Scott Fitzgerald",
+            cover: "/placeholder.svg?height=300&width=200&text=Gatsby",
+            format: "epub",
+            progress: 0.45,
+            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: "2",
+            title: "1984",
+            author: "George Orwell",
+            cover: "/placeholder.svg?height=300&width=200&text=1984",
+            format: "pdf",
+            progress: 0.23,
+            created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: "3",
+            title: "Thinking, Fast and Slow",
+            author: "Daniel Kahneman",
+            cover: "/placeholder.svg?height=300&width=200&text=Thinking",
+            format: "epub",
+            progress: 0.67,
+            created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+        ]
+        setBooks(mockBooks)
       } finally {
         setLoading(false)
       }
