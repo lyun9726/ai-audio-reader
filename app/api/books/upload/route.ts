@@ -135,112 +135,81 @@ export async function POST(req: Request) {
     let totalParagraphs = 0
     let extractedAuthor = author
 
-    if (format === 'pdf' || format === 'epub') {
-      try {
-        // Use client-extracted text if available (for PDF)
-        let fullText = extractedText
+    // Use client-extracted text if available (skip server-side extraction for now)
+    if (extractedText && extractedText.trim().length > 0) {
+      console.log('[Upload] Using client-extracted text, length:', extractedText.length)
 
-        if (!fullText) {
-          // Fall back to server-side extraction for EPUB
-          console.log('[Upload] Extracting text from', format.toUpperCase(), '...')
-          const buffer = Buffer.from(arrayBuffer)
-          const { content, paragraphs: extractedParas } = await processBookFile(buffer, format)
-          fullText = content.text
-          extractedAuthor = extractedAuthor || content.author || null
-        } else {
-          console.log('[Upload] Using client-extracted text, length:', fullText.length)
-        }
+      // Split into paragraphs
+      const { splitIntoParagraphs } = await import('@/lib/services/textExtractor')
+      const paragraphs = splitIntoParagraphs(extractedText)
 
-        if (!fullText || fullText.trim().length === 0) {
-          throw new Error('No text extracted from file')
-        }
+      totalParagraphs = paragraphs.length
+      console.log('[Upload] ✓ Split into', totalParagraphs, 'paragraphs')
 
-        // Split into paragraphs
-        const { splitIntoParagraphs } = await import('@/lib/services/textExtractor')
-        const paragraphs = splitIntoParagraphs(fullText)
-
-        totalParagraphs = paragraphs.length
-        console.log('[Upload] ✓ Split into', totalParagraphs, 'paragraphs')
-
-        // Create book record first
-        const { data: book, error: bookError } = await supabase
-          .from('books')
-          .insert({
-            owner_user_id: userId,
-            title: title,
-            author: extractedAuthor,
-            description: description,
-            original_lang: sourceLang,
-            target_lang: targetLang,
-            status: 'ready',
-            format: format,
-            file_url: publicUrl,
-            s3_original_url: publicUrl,
-            cover_url: coverUrl,
-            total_chapters: 1,
-            total_paragraphs: totalParagraphs,
-          })
-          .select()
-          .single()
-
-        if (bookError) {
-          console.error('Error creating book:', bookError)
-          return NextResponse.json(
-            { error: 'Failed to create book record' },
-            { status: 500 }
-          )
-        }
-
-        // Insert paragraphs into database
-        console.log('[Upload] Saving paragraphs to database...')
-        const paragraphRecords = paragraphs.map(p => ({
-          book_id: book.id,
-          chapter: p.chapter,
-          para_idx: p.paraIdx,
-          text_original: p.text,
-        }))
-
-        // Insert in batches to avoid payload size issues
-        const BATCH_SIZE = 100
-        for (let i = 0; i < paragraphRecords.length; i += BATCH_SIZE) {
-          const batch = paragraphRecords.slice(i, i + BATCH_SIZE)
-          const { error: parasError } = await supabase
-            .from('book_paragraphs')
-            .insert(batch)
-
-          if (parasError) {
-            console.error('[Upload] Error inserting paragraphs:', parasError)
-            // Continue anyway - some paragraphs are better than none
-          }
-        }
-
-        console.log('[Upload] ✓ Book created successfully:', book.id)
-        console.log('[Upload] ✓ Original file preserved at:', publicUrl)
-        console.log('[Upload] ✓ Saved', totalParagraphs, 'paragraphs to database')
-
-        return NextResponse.json({
-          success: true,
-          book: {
-            id: book.id,
-            title: book.title,
-            format: book.format,
-            fileUrl: publicUrl,
-            totalParagraphs: totalParagraphs,
-          },
+      // Create book record
+      const { data: book, error: bookError } = await supabase
+        .from('books')
+        .insert({
+          owner_user_id: userId,
+          title: title,
+          author: extractedAuthor,
+          description: description,
+          original_lang: sourceLang,
+          target_lang: targetLang,
+          status: 'ready',
+          format: format,
+          file_url: publicUrl,
+          s3_original_url: publicUrl,
+          cover_url: coverUrl,
+          total_chapters: 1,
+          total_paragraphs: totalParagraphs,
         })
-      } catch (extractError: any) {
-        console.error('[Upload] Text extraction failed:', extractError)
-        console.error('[Upload] Error stack:', extractError.stack)
+        .select()
+        .single()
 
-        // For PDF/EPUB, text extraction is critical - return error instead of creating empty book
+      if (bookError) {
+        console.error('Error creating book:', bookError)
         return NextResponse.json(
-          {
-            error: 'Text extraction failed: ' + extractError.message,
-            details: 'Unable to extract text from this PDF/EPUB file. The file may be scanned images or password-protected.',
-          },
+          { error: 'Failed to create book record' },
           { status: 500 }
         )
       }
+
+      // Insert paragraphs into database
+      console.log('[Upload] Saving paragraphs to database...')
+      const paragraphRecords = paragraphs.map(p => ({
+        book_id: book.id,
+        chapter: p.chapter,
+        para_idx: p.paraIdx,
+        text_original: p.text,
+      }))
+
+      // Insert in batches
+      const BATCH_SIZE = 100
+      for (let i = 0; i < paragraphRecords.length; i += BATCH_SIZE) {
+        const batch = paragraphRecords.slice(i, i + BATCH_SIZE)
+        const { error: parasError } = await supabase
+          .from('book_paragraphs')
+          .insert(batch)
+
+        if (parasError) {
+          console.error('[Upload] Error inserting paragraphs:', parasError)
+        }
+      }
+
+      console.log('[Upload] ✓ Book created successfully:', book.id)
+      console.log('[Upload] ✓ Saved', totalParagraphs, 'paragraphs to database')
+
+      return NextResponse.json({
+        success: true,
+        book: {
+          id: book.id,
+          title: book.title,
+          format: book.format,
+          fileUrl: publicUrl,
+          totalParagraphs: totalParagraphs,
+        },
+      })
     }
 
     // Fallback: Create book without paragraphs (only for TXT format)
