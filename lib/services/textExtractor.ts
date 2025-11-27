@@ -20,7 +20,8 @@ export async function extractPdfText(buffer: Buffer): Promise<ExtractedContent> 
     console.log('[PDF Extract] Starting extraction, buffer size:', buffer.length, 'bytes')
 
     // Use pdf-parse which is more reliable for server-side Node.js
-    const pdfParse = (await import('pdf-parse')).default
+    const pdfParseModule = await import('pdf-parse')
+    const pdfParse = pdfParseModule.default || pdfParseModule
 
     console.log('[PDF Extract] Parsing PDF document...')
     const data = await pdfParse(buffer)
