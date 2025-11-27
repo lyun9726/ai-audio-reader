@@ -9,57 +9,38 @@ export const runtime = 'nodejs'
 export const maxDuration = 60 // 60 seconds timeout
 export const dynamic = 'force-dynamic'
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
     console.log('[Upload] Processing upload request...')
 
-    // Use regular client for auth check
-    const supabase = await createClient()
-
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    // TODO: For UI2 demo, allow uploads without authentication
-    // Remove this bypass once authentication is properly integrated
-    const demoMode = !user
-    const userId = user?.id || 'demo-user-id'
-
-    /* if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    } */
-
-    // Parse form data with error handling
-    let formData: FormData
-    try {
-      console.log('[Upload] Parsing FormData...')
-      formData = await request.formData()
-      console.log('[Upload] FormData parsed successfully')
-    } catch (parseError: any) {
-      console.error('[Upload] FormData parse error:', parseError.message)
-      return NextResponse.json(
-        { error: 'Failed to parse upload data. Please try again.' },
-        { status: 400 }
-      )
-    }
-
+    // Parse FormData first - critical step
+    const formData = await req.formData()
     const file = formData.get('file') as File
-    const title = formData.get('title') as string
-    const author = formData.get('author') as string || null
-    const description = formData.get('description') as string || null
-    const sourceLang = formData.get('sourceLang') as string || 'en'
-    const targetLang = formData.get('targetLang') as string || 'zh'
-    const extractedText = formData.get('extractedText') as string || null // Client-side extracted text
-    const coverPreview = formData.get('coverPreview') as string || null // Client-side extracted cover
-
-    console.log('[Upload] File:', file?.name, 'Size:', file?.size, 'Type:', file?.type)
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
+    console.log('[Upload] File received:', file.name, 'Size:', file.size, 'Type:', file.type)
+
+    // Get other form fields
+    const title = formData.get('title') as string
+    const author = formData.get('author') as string || null
+    const description = formData.get('description') as string || null
+    const sourceLang = formData.get('sourceLang') as string || 'en'
+    const targetLang = formData.get('targetLang') as string || 'zh'
+    const extractedText = formData.get('extractedText') as string || null
+    const coverPreview = formData.get('coverPreview') as string || null
+
+    // Validate title
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
     }
+
+    // Auth check
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const userId = user?.id || 'demo-user-id' // Demo mode for UI2
 
     // Detect format
     const format = detectFormat(file)
