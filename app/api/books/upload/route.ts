@@ -11,6 +11,8 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
+    console.log('[Upload] Processing upload request...')
+
     // Use regular client for auth check
     const supabase = await createClient()
 
@@ -26,8 +28,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     } */
 
-    // Parse form data
-    const formData = await request.formData()
+    // Parse form data with error handling
+    let formData: FormData
+    try {
+      console.log('[Upload] Parsing FormData...')
+      formData = await request.formData()
+      console.log('[Upload] FormData parsed successfully')
+    } catch (parseError: any) {
+      console.error('[Upload] FormData parse error:', parseError.message)
+      return NextResponse.json(
+        { error: 'Failed to parse upload data. Please try again.' },
+        { status: 400 }
+      )
+    }
+
     const file = formData.get('file') as File
     const title = formData.get('title') as string
     const author = formData.get('author') as string || null
@@ -36,6 +50,8 @@ export async function POST(request: Request) {
     const targetLang = formData.get('targetLang') as string || 'zh'
     const extractedText = formData.get('extractedText') as string || null // Client-side extracted text
     const coverPreview = formData.get('coverPreview') as string || null // Client-side extracted cover
+
+    console.log('[Upload] File:', file?.name, 'Size:', file?.size, 'Type:', file?.type)
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
