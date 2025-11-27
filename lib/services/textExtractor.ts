@@ -22,16 +22,15 @@ export async function extractPdfText(buffer: Buffer): Promise<ExtractedContent> 
     // Use pdfjs-dist which works in Node.js environment
     const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
 
-    // Disable worker for server-side usage to avoid worker file issues
-    pdfjsLib.GlobalWorkerOptions.workerSrc = ''
+    // Set worker source for server-side usage
+    // Point to the worker file in node_modules
+    pdfjsLib.GlobalWorkerOptions.workerSrc = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')
 
     console.log('[PDF Extract] Loading PDF document...')
     const loadingTask = pdfjsLib.getDocument({
       data: new Uint8Array(buffer),
       useSystemFonts: true,
       standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
-      useWorkerFetch: false,
-      isEvalSupported: false,
     })
 
     const pdfDoc = await loadingTask.promise
