@@ -66,7 +66,7 @@ export default function UploadPage() {
 
       // Redirect to reader after a brief delay
       setTimeout(() => {
-        router.push(`/reader/${result.bookId}`)
+        router.push(`/reader/${result.book.id}`)
       }, 1500)
     } catch (error) {
       console.error("Upload failed:", error)

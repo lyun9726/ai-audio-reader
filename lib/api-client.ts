@@ -46,16 +46,34 @@ export const booksAPI = {
   /**
    * Upload a new book
    */
-  async upload(file: File): Promise<{ bookId: string }> {
+  async upload(file: File, options?: {
+    title?: string
+    author?: string
+    description?: string
+  }): Promise<{ success: boolean; book: { id: string; title: string; format: string } }> {
     const formData = new FormData()
     formData.append('file', file)
+
+    // Use filename as title if not provided
+    const title = options?.title || file.name.replace(/\.[^/.]+$/, "")
+    formData.append('title', title)
+
+    if (options?.author) {
+      formData.append('author', options.author)
+    }
+    if (options?.description) {
+      formData.append('description', options.description)
+    }
 
     const res = await fetch('/api/books/upload', {
       method: 'POST',
       body: formData,
     })
 
-    if (!res.ok) throw new Error('Upload failed')
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: 'Upload failed' }))
+      throw new Error(errorData.error || errorData.details || 'Upload failed')
+    }
     return res.json()
   },
 

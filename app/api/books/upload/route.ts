@@ -17,9 +17,14 @@ export async function POST(request: Request) {
     // Check authentication
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-    if (userError || !user) {
+    // TODO: For UI2 demo, allow uploads without authentication
+    // Remove this bypass once authentication is properly integrated
+    const demoMode = !user
+    const userId = user?.id || 'demo-user-id'
+
+    /* if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    } */
 
     // Parse form data
     const formData = await request.formData()
@@ -73,7 +78,7 @@ export async function POST(request: Request) {
       .substring(0, 100)          // Limit length to 100 chars
 
     // Upload file to Supabase Storage first
-    const fileName = `${user.id}/${Date.now()}_${sanitizedFileName}`
+    const fileName = `${userId}/${Date.now()}_${sanitizedFileName}`
     const arrayBuffer = await file.arrayBuffer()
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
@@ -107,7 +112,7 @@ export async function POST(request: Request) {
         const coverBuffer = Buffer.from(base64Data, 'base64')
 
         // 上传封面到 Storage
-        const coverFileName = `${user.id}/covers/${Date.now()}_cover.jpg`
+        const coverFileName = `${userId}/covers/${Date.now()}_cover.jpg`
         const { error: coverError } = await supabaseAdmin.storage
           .from('books')
           .upload(coverFileName, coverBuffer, {
@@ -164,7 +169,7 @@ export async function POST(request: Request) {
         const { data: book, error: bookError } = await supabase
           .from('books')
           .insert({
-            owner_user_id: user.id,
+            owner_user_id: userId,
             title: title,
             author: extractedAuthor,
             description: description,
@@ -245,7 +250,7 @@ export async function POST(request: Request) {
     const { data: book, error: bookError } = await supabase
       .from('books')
       .insert({
-        owner_user_id: user.id,
+        owner_user_id: userId,
         title: title,
         author: extractedAuthor,
         description: description,
